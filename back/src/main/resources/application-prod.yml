@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/mydb?useSSL=false&serverTimezone=Asia/Seoul
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: myuser
+    password: mypassword
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: update  # 운영에서는 보통 update 또는 none 사용
+    show-sql: false  # 운영에서는 보통 비활성화
+    properties:
+      hibernate:
+        format_sql: false
+  sql:
+    init:
+      mode: never  # 운영 환경에서는 SQL 실행 방지
