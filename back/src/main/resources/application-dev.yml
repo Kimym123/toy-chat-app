@@ -15,3 +15,10 @@ spring:
   sql:
     init:
       mode: always  # data.sql, schema.sql 실행
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
