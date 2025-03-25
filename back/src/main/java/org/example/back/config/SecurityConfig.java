@@ -34,7 +34,7 @@ public class SecurityConfig {
     // 일반 API Security 설정
     @Bean
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
-        http.authorizeHttpRequests(auth -> auth.requestMatchers("/home", "/login").permitAll()  // 인증 없이 접근 가능
+        http.authorizeHttpRequests(auth -> auth.requestMatchers("/home", "/api/members/login", "/api/members/register").permitAll()  // 인증 없이 접근 가능
                         .requestMatchers("/admin/**").hasRole("ADMIN") // ADMIN만 접근 가능
                         .requestMatchers("/user/**").hasRole("USER") // USER만 접근 가능
                         .anyRequest().authenticated()) // 나머지 모든 요청은 인증 필요
