@@ -2,6 +2,7 @@ package org.example.back.domain.member;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.back.domain.base.BaseTimeEntity;
 
 @Entity
 @Getter
@@ -9,7 +10,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Member {
+public class Member extends BaseTimeEntity {
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -23,10 +25,17 @@ public class Member {
     @Column(nullable = false, unique = true)
     private String nickname;
     
+    @Column(nullable = false, unique = true)
+    private String email;
     
-    public Member(String username, String password, String nickname) {
+    @Column(unique = true)
+    private String phone;
+    
+    public Member(String username, String password, String nickname, String email, String phone) {
         this.username = username;
         this.password = password;
         this.nickname = nickname;
+        this.email = email;
+        this.phone = phone;
     }
 }

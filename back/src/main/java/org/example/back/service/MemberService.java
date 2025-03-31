@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import org.example.back.domain.member.Member;
 import org.example.back.dto.member.request.MemberRequest;
 import org.example.back.dto.member.response.MemberResponse;
+import org.example.back.exception.member.MemberErrorCode;
+import org.example.back.exception.member.MemberException;
 import org.example.back.repository.MemberRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,29 +20,35 @@ public class MemberService {
     
     // 중복 코드 제거용
     private Member findMemberById(Long id) {
-        return memberRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        return memberRepository.findById(id).orElseThrow(() -> new MemberException(MemberErrorCode.USER_NOT_FOUND));
     }
     
     // 회원 가입
     @Transactional
     public MemberResponse registerMember(MemberRequest request) {
         if (memberRepository.existsByUsername(request.getUsername())) {
-            throw new IllegalArgumentException("이미 존재하는 사용자 이름입니다.");
+            throw new MemberException(MemberErrorCode.DUPLICATE_USERNAME);
         }
         
         if (memberRepository.existsByNickname(request.getNickname())) {
-            throw new IllegalArgumentException("이미 존재하는 닉네임입니다.");
+            throw new MemberException(MemberErrorCode.DUPLICATE_NICKNAME);
         }
         
-        Member member = Member.builder()
-                .username(request.getUsername())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .nickname(request.getNickname())
-                .build();
+        if (memberRepository.existsByEmail(request.getEmail())) {
+            throw new MemberException(MemberErrorCode.DUPLICATE_EMAIL);
+        }
+        
+        if (memberRepository.existsByPhone(request.getPhone())) {
+            throw new MemberException(MemberErrorCode.DUPLICATE_PHONE);
+        }
+        
+        Member member = Member.builder().username(request.getUsername())
+                .password(passwordEncoder.encode(request.getPassword())).nickname(request.getNickname())
+                .email(request.getEmail()).phone(request.getPhone()).build();
         
         memberRepository.save(member);
-        return new MemberResponse(member.getId(), member.getUsername(), member.getNickname());
+        return new MemberResponse(member.getId(), member.getUsername(), member.getNickname(), member.getEmail(),
+                member.getPhone());
     }
     
     // 로그인
@@ -52,14 +60,16 @@ public class MemberService {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
         
-        return new MemberResponse(member.getId(), member.getUsername(), member.getNickname());
+        return new MemberResponse(member.getId(), member.getUsername(), member.getNickname(), member.getEmail(),
+                member.getPhone());
     }
     
     // 회원 정보 조회
     public MemberResponse getMemberById(Long id) {
         Member member = findMemberById(id);
         
-        return new MemberResponse(member.getId(), member.getUsername(), member.getNickname());
+        return new MemberResponse(member.getId(), member.getUsername(), member.getNickname(), member.getEmail(),
+                member.getPhone());
     }
     
     // 비밀번호 변경
