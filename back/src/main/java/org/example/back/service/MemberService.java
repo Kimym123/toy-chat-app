@@ -3,7 +3,9 @@ package org.example.back.service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.back.domain.member.Member;
-import org.example.back.dto.member.request.MemberRequest;
+import org.example.back.dto.member.request.MemberLoginRequest;
+import org.example.back.dto.member.request.MemberPasswordChangeRequest;
+import org.example.back.dto.member.request.MemberRegisterRequest;
 import org.example.back.dto.member.response.MemberResponse;
 import org.example.back.exception.member.MemberErrorCode;
 import org.example.back.exception.member.MemberException;
@@ -25,7 +27,7 @@ public class MemberService {
     
     // 회원 가입
     @Transactional
-    public MemberResponse registerMember(MemberRequest request) {
+    public MemberResponse registerMember(MemberRegisterRequest request) {
         if (memberRepository.existsByUsername(request.getUsername())) {
             throw new MemberException(MemberErrorCode.DUPLICATE_USERNAME);
         }
@@ -52,7 +54,7 @@ public class MemberService {
     }
     
     // 로그인
-    public MemberResponse login(MemberRequest request) {
+    public MemberResponse login(MemberLoginRequest request) {
         Member member = memberRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
         
@@ -74,19 +76,16 @@ public class MemberService {
     
     // 비밀번호 변경
     @Transactional
-    public void changePassword(Long id, MemberRequest request) {
-        if (!id.equals(request.getId())) {
-            throw new IllegalArgumentException("잘못된 요청입니다.");
-        }
+    public void changePassword(Long id, MemberPasswordChangeRequest request) {
         
-        Member member = memberRepository.findById(request.getId())
+        Member member = memberRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
         
         if (!passwordEncoder.matches(request.getOldPassword(), member.getPassword())) {
             throw new IllegalArgumentException("기존 비밀번호가 일치하지 않습니다.");
         }
         
-        member.setPassword(passwordEncoder.encode(request.getPassword()));
+        member.setPassword(passwordEncoder.encode(request.getNewPassword()));
         memberRepository.save(member);
     }
     

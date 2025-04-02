@@ -5,8 +5,11 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.back.dto.member.request.MemberRequest;
+import org.example.back.dto.member.request.MemberLoginRequest;
+import org.example.back.dto.member.request.MemberPasswordChangeRequest;
+import org.example.back.dto.member.request.MemberRegisterRequest;
 import org.example.back.dto.member.response.MemberResponse;
 import org.example.back.service.MemberService;
 import org.springframework.http.ResponseEntity;
@@ -27,8 +30,7 @@ public class MemberController {
             @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터"),
             @ApiResponse(responseCode = "409", description = "중복된 사용자 또는 닉네임"),
     })
-    public ResponseEntity<MemberResponse> register(
-            @RequestBody MemberRequest request) {
+    public ResponseEntity<MemberResponse> register(@Valid @RequestBody MemberRegisterRequest request) {
         return ResponseEntity.ok(memberService.registerMember(request));
     }
     
@@ -39,7 +41,7 @@ public class MemberController {
             @ApiResponse(responseCode = "401", description = "비밀번호 불일치"),
             @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
     })
-    public ResponseEntity<MemberResponse> login(@RequestBody MemberRequest request) {
+    public ResponseEntity<MemberResponse> login(@Valid @RequestBody MemberLoginRequest request) {
         return ResponseEntity.ok(memberService.login(request));
     }
     
@@ -64,7 +66,7 @@ public class MemberController {
     })
     public ResponseEntity<String> changePassword(
             @Parameter(description = "비밀번호 변경할 회원 ID", example = "1") @PathVariable Long id,
-            @RequestBody MemberRequest request) {
+            @Valid @RequestBody MemberPasswordChangeRequest request) {
         memberService.changePassword(id, request);
         return ResponseEntity.ok("비밀번호가 변경되었습니다.");
     }

@@ -2,7 +2,8 @@ package org.example.back.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.back.config.SecurityConfig;
-import org.example.back.dto.member.request.MemberRequest;
+import org.example.back.dto.member.request.MemberPasswordChangeRequest;
+import org.example.back.dto.member.request.MemberRegisterRequest;
 import org.example.back.dto.member.response.MemberResponse;
 import org.example.back.service.MemberService;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,13 +39,15 @@ public class MemberControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
     
-    private MemberRequest request;
+    private MemberRegisterRequest request;
     private MemberResponse response;
     
     @BeforeEach
     void 준비() {
-        request = new MemberRequest("testUser", "password", "testNickName");
-        response = new MemberResponse(1L, "testUser", "testNickName");
+        request = MemberRegisterRequest.builder().username("testUser").password("password").nickname("testNickName")
+                .email("test@google.com").phone("010-1234-5678").build();
+        response = MemberResponse.builder().id(1L).username("testUser").nickname("testNickName")
+                .email("test@google.com").phone("010-1234-5678").build();
     }
     
     @Test
@@ -83,16 +86,14 @@ public class MemberControllerTest {
     @Test
     @DisplayName("비밀번호 변경 성공")
     void 비밀번호_변경_성공() throws Exception {
-        MemberRequest changeRequest = MemberRequest.builder().id(1L).oldPassword("oldPassword").password("newPassword")
-                .build();
+        MemberPasswordChangeRequest changeRequest = MemberPasswordChangeRequest.builder().oldPassword("oldPassword")
+                .newPassword("newPassword").build();
         
         // void 타입 -> doNothing()
         doNothing().when(memberService).changePassword(eq(1L), any());
         
-        mockMvc.perform(put("/api/members/{id}/password", 1L)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(changeRequest)))
-                .andExpect(status().isOk())
+        mockMvc.perform(put("/api/members/{id}/password", 1L).contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(changeRequest))).andExpect(status().isOk())
                 .andExpect(content().string("비밀번호가 변경되었습니다."));
         
         verify(memberService, times(1)).changePassword(eq(1L), any());
@@ -103,8 +104,7 @@ public class MemberControllerTest {
     void 회원삭제_성공() throws Exception {
         doNothing().when(memberService).deleteMember(1L);
         
-        mockMvc.perform(delete("/api/members/{id}", 1L))
-                .andExpect(status().isOk())
+        mockMvc.perform(delete("/api/members/{id}", 1L)).andExpect(status().isOk())
                 .andExpect(content().string("회원이 삭제되었습니다."));
         
         verify(memberService, times(1)).deleteMember(1L);
@@ -116,7 +116,6 @@ public class MemberControllerTest {
     void 회원조회_실패() throws Exception {
         when(memberService.getMemberById(2L)).thenThrow(new IllegalArgumentException("사용자를 찾을 수 없습니다."));
         
-        mockMvc.perform(get("/api/members/{id}", 2L))
-                .andExpect(status().isBadRequest());
+        mockMvc.perform(get("/api/members/{id}", 2L)).andExpect(status().isBadRequest());
     }
 }

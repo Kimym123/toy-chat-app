@@ -1,7 +1,9 @@
 package org.example.back.service;
 
 import org.example.back.domain.member.Member;
-import org.example.back.dto.member.request.MemberRequest;
+import org.example.back.dto.member.request.MemberLoginRequest;
+import org.example.back.dto.member.request.MemberPasswordChangeRequest;
+import org.example.back.dto.member.request.MemberRegisterRequest;
 import org.example.back.dto.member.response.MemberResponse;
 import org.example.back.repository.MemberRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,18 +41,20 @@ public class MemberServiceTest {
     
     @BeforeEach
     void 준비() {
-        member = new Member(1L, "testUser", "password", "testNick");
+        member = Member.builder().username("testUser").password("password").nickname("testNick")
+                .email("test@google.com").phone("010-1234-5678").build();
     }
     
-    private MemberRequest createMemberRequest(Member member) {
-        return new MemberRequest(member.getUsername(), member.getPassword(), member.getNickname());
+    private MemberRegisterRequest createMemberRequest(Member member) {
+        return new MemberRegisterRequest(member.getUsername(), member.getPassword(), member.getNickname(),
+                member.getEmail(), member.getPhone());
     }
     
     @Test
     @DisplayName("회원가입 성공 테스트 - 정상적으로 회원가입이 이뤄지는지 검증")
     void 회원가입_성공() {
         // given : 요청 정보 설정
-        MemberRequest request = createMemberRequest(member);
+        MemberRegisterRequest request = createMemberRequest(member);
         
         // when : 중복 체크 및 저장 설정
         when(memberRepository.existsByUsername(request.getUsername())).thenReturn(false);
@@ -73,7 +77,7 @@ public class MemberServiceTest {
     @Test
     @DisplayName("회원가입 중복 테스트 - 중복된 사용자 이름이 존재할 경우 예외 확인")
     void 회원가입_증복_사용자명() {
-        MemberRequest request = createMemberRequest(member);
+        MemberRegisterRequest request = createMemberRequest(member);
         when(memberRepository.existsByUsername(request.getUsername())).thenReturn(true);
         
         Exception exception = assertThrows(IllegalArgumentException.class, () -> memberService.registerMember(request));
@@ -83,7 +87,7 @@ public class MemberServiceTest {
     @Test
     @DisplayName("닉네임 중복 테스트 - 중복된 닉네임이 존재할 경우 예외 확인")
     void 회원가입_중복_닉네임() {
-        MemberRequest request = createMemberRequest(member);
+        MemberRegisterRequest request = createMemberRequest(member);
         when(memberRepository.existsByNickname(request.getNickname())).thenReturn(true);
         
         Exception exception = assertThrows(IllegalArgumentException.class, () -> memberService.registerMember(request));
@@ -98,7 +102,7 @@ public class MemberServiceTest {
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
         
         // when
-        MemberResponse response = memberService.login(new MemberRequest(member.getUsername(), "password"));
+        MemberResponse response = memberService.login(new MemberLoginRequest(member.getUsername(), "password"));
         
         // then
         assertNotNull(response);
@@ -114,7 +118,7 @@ public class MemberServiceTest {
         
         // then
         Exception exception = assertThrows(IllegalArgumentException.class,
-                () -> memberService.login(new MemberRequest(member.getUsername(), "password")));
+                () -> memberService.login(new MemberLoginRequest(member.getUsername(), "password")));
         assertEquals("비밀번호가 일치하지 않습니다.", exception.getMessage());
     }
     
@@ -126,7 +130,7 @@ public class MemberServiceTest {
         
         // then
         Exception exception = assertThrows(IllegalArgumentException.class,
-                () -> memberService.login(new MemberRequest("nonExistentUser", "password")));
+                () -> memberService.login(new MemberLoginRequest("nonExistentUser", "password")));
         assertEquals("사용자를 찾을 수 없습니다.", exception.getMessage());
     }
     
@@ -138,10 +142,8 @@ public class MemberServiceTest {
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
         when(passwordEncoder.encode(anyString())).thenReturn("newEncodedPassword");
         
-        MemberRequest request = new MemberRequest();
-        request.setId(member.getId());
-        request.setOldPassword("password");
-        request.setPassword("newPassword");
+        MemberPasswordChangeRequest request = MemberPasswordChangeRequest.builder().oldPassword("password")
+                .newPassword("newPassword").build();
         
         // when
         memberService.changePassword(member.getId(), request);
@@ -154,10 +156,8 @@ public class MemberServiceTest {
     @DisplayName("비밀번호 변경 시 ID 불일치 예외 테스트")
     void 비밀번호_변경_실패_ID_불일치_예외() {
         // given
-        MemberRequest request = new MemberRequest();
-        request.setId(1L);
-        request.setOldPassword("password");
-        request.setPassword("newPassword");
+        MemberPasswordChangeRequest request = MemberPasswordChangeRequest.builder().oldPassword("password")
+                .newPassword("newPassword").build();
         
         // when & then
         Exception exception = assertThrows(IllegalArgumentException.class,

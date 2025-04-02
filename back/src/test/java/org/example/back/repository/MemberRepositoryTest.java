@@ -23,7 +23,9 @@ public class MemberRepositoryTest {
     
     @BeforeEach
     void 준비() {
-        member = memberRepository.save(new Member("testUser", "password", "testNickname"));
+        member = memberRepository.save(
+                Member.builder().username("testUser").password("password").nickname("testNickname")
+                        .email("test@google.com").phone("010-1234-5678").build());
     }
     
     @Test
