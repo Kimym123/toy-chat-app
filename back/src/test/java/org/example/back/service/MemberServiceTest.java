@@ -5,6 +5,7 @@ import org.example.back.dto.member.request.MemberLoginRequest;
 import org.example.back.dto.member.request.MemberPasswordChangeRequest;
 import org.example.back.dto.member.request.MemberRegisterRequest;
 import org.example.back.dto.member.response.MemberResponse;
+import org.example.back.exception.member.MemberException;
 import org.example.back.repository.MemberRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
+import static org.example.back.exception.member.MemberErrorCode.USER_NOT_FOUND;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -80,7 +82,7 @@ public class MemberServiceTest {
         MemberRegisterRequest request = createMemberRequest(member);
         when(memberRepository.existsByUsername(request.getUsername())).thenReturn(true);
         
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> memberService.registerMember(request));
+        Exception exception = assertThrows(MemberException.class, () -> memberService.registerMember(request));
         assertEquals("이미 존재하는 사용자 이름입니다.", exception.getMessage());
     }
     
@@ -90,7 +92,7 @@ public class MemberServiceTest {
         MemberRegisterRequest request = createMemberRequest(member);
         when(memberRepository.existsByNickname(request.getNickname())).thenReturn(true);
         
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> memberService.registerMember(request));
+        Exception exception = assertThrows(MemberException.class, () -> memberService.registerMember(request));
         assertEquals("이미 존재하는 닉네임입니다.", exception.getMessage());
     }
     
@@ -117,7 +119,7 @@ public class MemberServiceTest {
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
         
         // then
-        Exception exception = assertThrows(IllegalArgumentException.class,
+        Exception exception = assertThrows(MemberException.class,
                 () -> memberService.login(new MemberLoginRequest(member.getUsername(), "password")));
         assertEquals("비밀번호가 일치하지 않습니다.", exception.getMessage());
     }
@@ -129,7 +131,7 @@ public class MemberServiceTest {
         when(memberRepository.findByUsername("nonExistentUser")).thenReturn(Optional.empty());
         
         // then
-        Exception exception = assertThrows(IllegalArgumentException.class,
+        Exception exception = assertThrows(MemberException.class,
                 () -> memberService.login(new MemberLoginRequest("nonExistentUser", "password")));
         assertEquals("사용자를 찾을 수 없습니다.", exception.getMessage());
     }
@@ -160,10 +162,9 @@ public class MemberServiceTest {
                 .newPassword("newPassword").build();
         
         // when & then
-        Exception exception = assertThrows(IllegalArgumentException.class,
+        Exception exception = assertThrows(MemberException.class,
                 () -> memberService.changePassword(2L, request));
-        
-        assertEquals("잘못된 요청입니다.", exception.getMessage());
+        assertEquals(USER_NOT_FOUND.getMessage(), exception.getMessage());
     }
     
     @Test

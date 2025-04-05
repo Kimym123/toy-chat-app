@@ -7,11 +7,12 @@ import org.example.back.dto.member.request.MemberLoginRequest;
 import org.example.back.dto.member.request.MemberPasswordChangeRequest;
 import org.example.back.dto.member.request.MemberRegisterRequest;
 import org.example.back.dto.member.response.MemberResponse;
-import org.example.back.exception.member.MemberErrorCode;
 import org.example.back.exception.member.MemberException;
 import org.example.back.repository.MemberRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import static org.example.back.exception.member.MemberErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
@@ -22,26 +23,26 @@ public class MemberService {
     
     // 중복 코드 제거용
     private Member findMemberById(Long id) {
-        return memberRepository.findById(id).orElseThrow(() -> new MemberException(MemberErrorCode.USER_NOT_FOUND));
+        return memberRepository.findById(id).orElseThrow(() -> new MemberException(USER_NOT_FOUND));
     }
     
     // 회원 가입
     @Transactional
     public MemberResponse registerMember(MemberRegisterRequest request) {
         if (memberRepository.existsByUsername(request.getUsername())) {
-            throw new MemberException(MemberErrorCode.DUPLICATE_USERNAME);
+            throw new MemberException(DUPLICATE_USERNAME);
         }
         
         if (memberRepository.existsByNickname(request.getNickname())) {
-            throw new MemberException(MemberErrorCode.DUPLICATE_NICKNAME);
+            throw new MemberException(DUPLICATE_NICKNAME);
         }
         
         if (memberRepository.existsByEmail(request.getEmail())) {
-            throw new MemberException(MemberErrorCode.DUPLICATE_EMAIL);
+            throw new MemberException(DUPLICATE_EMAIL);
         }
         
         if (memberRepository.existsByPhone(request.getPhone())) {
-            throw new MemberException(MemberErrorCode.DUPLICATE_PHONE);
+            throw new MemberException(DUPLICATE_PHONE);
         }
         
         Member member = Member.builder().username(request.getUsername())
@@ -56,10 +57,10 @@ public class MemberService {
     // 로그인
     public MemberResponse login(MemberLoginRequest request) {
         Member member = memberRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new MemberException(USER_NOT_FOUND));
         
         if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
-            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+            throw new MemberException(INVALID_PASSWORD);
         }
         
         return new MemberResponse(member.getId(), member.getUsername(), member.getNickname(), member.getEmail(),
@@ -79,10 +80,10 @@ public class MemberService {
     public void changePassword(Long id, MemberPasswordChangeRequest request) {
         
         Member member = memberRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new MemberException(USER_NOT_FOUND));
         
         if (!passwordEncoder.matches(request.getOldPassword(), member.getPassword())) {
-            throw new IllegalArgumentException("기존 비밀번호가 일치하지 않습니다.");
+            throw new MemberException(INVALID_CURRENT_PASSWORD);
         }
         
         member.setPassword(passwordEncoder.encode(request.getNewPassword()));

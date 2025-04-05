@@ -5,6 +5,7 @@ import org.example.back.config.SecurityConfig;
 import org.example.back.dto.member.request.MemberPasswordChangeRequest;
 import org.example.back.dto.member.request.MemberRegisterRequest;
 import org.example.back.dto.member.response.MemberResponse;
+import org.example.back.exception.member.MemberException;
 import org.example.back.service.MemberService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,6 +19,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.example.back.exception.member.MemberErrorCode.USER_NOT_FOUND;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -114,8 +116,8 @@ public class MemberControllerTest {
     @Test
     @DisplayName("회원 조회 실패 - 회원 없음")
     void 회원조회_실패() throws Exception {
-        when(memberService.getMemberById(2L)).thenThrow(new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        when(memberService.getMemberById(2L)).thenThrow(new MemberException(USER_NOT_FOUND));
         
-        mockMvc.perform(get("/api/members/{id}", 2L)).andExpect(status().isBadRequest());
+        mockMvc.perform(get("/api/members/{id}", 2L)).andExpect(status().isNotFound());
     }
 }
