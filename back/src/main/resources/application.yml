@@ -1,3 +1,8 @@
 spring:
   profiles:
     active: dev  # 기본값을 'dev'로 설정, 운영에서는 'prod'로 변경
+
+jwt:
+  secret: bXktc3VwZXItc2VjcmV0LWp3dC1rZXktMTIzNDU2Nzg= # base64 인코딩된 32바이트 이상 시크릿키
+  access-token-validity: 1800 # 30분
+  refresh-token-validity: 1209600 # 2주

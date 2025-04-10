@@ -3,12 +3,14 @@ package org.example.back.service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.back.domain.member.Member;
+import org.example.back.dto.auth.TokenResponse;
 import org.example.back.dto.member.request.MemberLoginRequest;
 import org.example.back.dto.member.request.MemberPasswordChangeRequest;
 import org.example.back.dto.member.request.MemberRegisterRequest;
 import org.example.back.dto.member.response.MemberResponse;
 import org.example.back.exception.member.MemberException;
 import org.example.back.repository.MemberRepository;
+import org.example.back.security.JwtTokenProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +22,7 @@ public class MemberService {
     
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
     
     // 중복 코드 제거용
     private Member findMemberById(Long id) {
@@ -55,7 +58,7 @@ public class MemberService {
     }
     
     // 로그인
-    public MemberResponse login(MemberLoginRequest request) {
+    public TokenResponse login(MemberLoginRequest request) {
         Member member = memberRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new MemberException(USER_NOT_FOUND));
         
@@ -63,8 +66,16 @@ public class MemberService {
             throw new MemberException(INVALID_PASSWORD);
         }
         
-        return new MemberResponse(member.getId(), member.getUsername(), member.getNickname(), member.getEmail(),
-                member.getPhone());
+        // 토큰 발급
+        String accessToken = jwtTokenProvider.createAccessToken(member.getId(), "USER"); // 기본적으로 USER
+        String refreshToken = jwtTokenProvider.createRefreshToken(member.getId());
+        
+        // TODO: Refresh 토큰 저장 로직 (DB 또는 Redis 추후 구현)
+        
+        return TokenResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
     }
     
     // 회원 정보 조회

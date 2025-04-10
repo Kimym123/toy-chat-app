@@ -1,9 +1,13 @@
 package org.example.back.config;
 
+import lombok.RequiredArgsConstructor;
+import org.example.back.security.JwtAuthenticationFilter;
+import org.example.back.security.JwtTokenProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -11,9 +15,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+@RequiredArgsConstructor
 public class SecurityConfig {
+    
+    private final JwtTokenProvider jwtTokenProvider;
     
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -38,8 +46,9 @@ public class SecurityConfig {
                         .requestMatchers("/admin/**").hasRole("ADMIN") // ADMIN만 접근 가능
                         .requestMatchers("/user/**").hasRole("USER") // USER만 접근 가능
                         .anyRequest().authenticated()) // 나머지 모든 요청은 인증 필요
-                .httpBasic(httpBasic -> httpBasic.realmName("Main API"))  // HTTP Basic 인증 사용
-                .csrf(csrf -> csrf.disable());  // CSRF 보호 비활성화
+                .csrf(csrf -> csrf.disable())  // CSRF 보호 비활성화
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
         
         return http.build();
     }

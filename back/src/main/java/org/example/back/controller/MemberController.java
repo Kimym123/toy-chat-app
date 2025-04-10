@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.back.dto.auth.TokenResponse;
 import org.example.back.dto.member.request.MemberLoginRequest;
 import org.example.back.dto.member.request.MemberPasswordChangeRequest;
 import org.example.back.dto.member.request.MemberRegisterRequest;
@@ -41,7 +42,7 @@ public class MemberController {
             @ApiResponse(responseCode = "401", description = "비밀번호 불일치"),
             @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
     })
-    public ResponseEntity<MemberResponse> login(@Valid @RequestBody MemberLoginRequest request) {
+    public ResponseEntity<TokenResponse> login(@Valid @RequestBody MemberLoginRequest request) {
         return ResponseEntity.ok(memberService.login(request));
     }
     

@@ -2,10 +2,12 @@ package org.example.back.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.back.config.SecurityConfig;
+import org.example.back.dto.auth.TokenResponse;
 import org.example.back.dto.member.request.MemberPasswordChangeRequest;
 import org.example.back.dto.member.request.MemberRegisterRequest;
 import org.example.back.dto.member.response.MemberResponse;
 import org.example.back.exception.member.MemberException;
+import org.example.back.security.JwtTokenProvider;
 import org.example.back.service.MemberService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -38,6 +40,9 @@ public class MemberControllerTest {
     @MockitoBean
     private MemberService memberService;
     
+    @MockitoBean
+    private JwtTokenProvider jwtTokenProvider;
+    
     @Autowired
     private ObjectMapper objectMapper;
     
@@ -67,12 +72,18 @@ public class MemberControllerTest {
     @DisplayName("로그인 성공")
     @WithAnonymousUser
     void 로그인_성공() throws Exception {
-        when(memberService.login(any())).thenReturn(response);
+        // given
+        TokenResponse tokenResponse = TokenResponse.builder()
+                .accessToken("test-access-token")
+                .refreshToken("test-refresh-token")
+                .build();
+        
+        when(memberService.login(any())).thenReturn(tokenResponse);
         
         mockMvc.perform(post("/api/members/login").contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))).andExpect(status().isOk())
-                .andExpect(jsonPath("$.username").value("testUser"))
-                .andExpect(jsonPath("$.nickname").value("testNickName"));
+                .andExpect(jsonPath("$.accessToken").value("test-access-token"))
+                .andExpect(jsonPath("$.refreshToken").value("test-refresh-token"));
     }
     
     @Test

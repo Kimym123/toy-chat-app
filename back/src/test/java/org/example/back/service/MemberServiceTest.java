@@ -1,6 +1,7 @@
 package org.example.back.service;
 
 import org.example.back.domain.member.Member;
+import org.example.back.dto.auth.TokenResponse;
 import org.example.back.dto.member.request.MemberLoginRequest;
 import org.example.back.dto.member.request.MemberPasswordChangeRequest;
 import org.example.back.dto.member.request.MemberRegisterRequest;
@@ -104,11 +105,14 @@ public class MemberServiceTest {
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
         
         // when
-        MemberResponse response = memberService.login(new MemberLoginRequest(member.getUsername(), "password"));
+        TokenResponse response = memberService.login(
+                new MemberLoginRequest(member.getUsername(), "password")
+        );
         
         // then
         assertNotNull(response);
-        assertEquals(member.getUsername(), response.getUsername());
+        assertNotNull(response.getAccessToken());
+        assertNotNull(response.getRefreshToken());
     }
     
     @Test
