@@ -1,10 +1,10 @@
 package org.example.back.security;
 
-import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +17,7 @@ import java.util.Date;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Getter
 public class JwtTokenProvider {
     
     @Value("${jwt.secret}")
@@ -51,32 +52,18 @@ public class JwtTokenProvider {
         Instant now = Instant.now();
         Instant expiry = now.plusMillis(validityInMillis);
         
-        return Jwts.builder()
-                .subject(String.valueOf(memberId))
-                .issuedAt(Date.from(now))
-                .expiration(Date.from(expiry))
+        return Jwts.builder().subject(String.valueOf(memberId)).issuedAt(Date.from(now)).expiration(Date.from(expiry))
                 .claim("role", role) // null 이면 무시됨
-                .signWith(key, Jwts.SIG.HS256)
-                .compact();
-                
+                .signWith(key, Jwts.SIG.HS256).compact();
+        
     }
     
     public Long getMemberId(String token) {
-        return Long.valueOf(Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .getSubject());
+        return Long.valueOf(Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload().getSubject());
     }
     
     public String getRole(String token) {
-        return (String) Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .get("role");
+        return (String) Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload().get("role");
     }
     
     public boolean validateToken(String token) {

@@ -1,5 +1,6 @@
 package org.example.back.service;
 
+import org.example.back.domain.auth.RefreshToken;
 import org.example.back.domain.member.Member;
 import org.example.back.dto.auth.TokenResponse;
 import org.example.back.dto.member.request.MemberLoginRequest;
@@ -8,6 +9,8 @@ import org.example.back.dto.member.request.MemberRegisterRequest;
 import org.example.back.dto.member.response.MemberResponse;
 import org.example.back.exception.member.MemberException;
 import org.example.back.repository.MemberRepository;
+import org.example.back.repository.auth.RefreshTokenRepository;
+import org.example.back.security.JwtTokenProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.example.back.exception.member.MemberErrorCode.USER_NOT_FOUND;
@@ -39,6 +43,12 @@ public class MemberServiceTest {
     
     @Mock
     private PasswordEncoder passwordEncoder;
+    
+    @Mock
+    private JwtTokenProvider jwtTokenProvider;
+    
+    @Mock
+    private RefreshTokenRepository refreshTokenRepository;
     
     private Member member;
     
@@ -103,16 +113,51 @@ public class MemberServiceTest {
         // given
         when(memberRepository.findByUsername(member.getUsername())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
+        when(jwtTokenProvider.createAccessToken(any(), any())).thenReturn("test-access-token");
+        when(jwtTokenProvider.createRefreshToken(any())).thenReturn("test-refresh-token");
         
         // when
         TokenResponse response = memberService.login(
-                new MemberLoginRequest(member.getUsername(), "password")
-        );
+                new MemberLoginRequest(member.getUsername(), member.getPassword()));
         
         // then
         assertNotNull(response);
-        assertNotNull(response.getAccessToken());
-        assertNotNull(response.getRefreshToken());
+        assertEquals("test-access-token", response.getAccessToken());
+        assertEquals("test-refresh-token", response.getRefreshToken());
+        verify(refreshTokenRepository).save(any(RefreshToken.class)); // 저장 호출 확인
+    }
+    
+    @Test
+    @DisplayName("로그인 성공 - 기존 RefreshToken 이 있으면 update 만 수행")
+    void 로그인_성공_기존_토큰_갱신() {
+        // given (이미 RefreshToken 존재한다 가정)
+        RefreshToken existingToken = RefreshToken.builder().id(1L).member(member).token("old-refresh-token")
+                .expiresAt(LocalDateTime.now().plusDays(7)).build();
+        
+        // 사용자 조회
+        when(memberRepository.findByUsername(member.getUsername())).thenReturn(Optional.of(member));
+        
+        // 비밀번호 일치
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
+        
+        // JWT 토큰 발급 mock
+        when(jwtTokenProvider.createAccessToken(any(), any())).thenReturn("new-access-token");
+        when(jwtTokenProvider.createRefreshToken(any())).thenReturn("new-refresh-token");
+        
+        // 기존 RefreshToken 이 존재
+        when(refreshTokenRepository.findByMember(member)).thenReturn(Optional.of(existingToken));
+        
+        // when
+        TokenResponse response = memberService.login(
+                new MemberLoginRequest(member.getUsername(), member.getPassword()));
+        
+        // then
+        assertNotNull(response);
+        assertEquals("new-access-token", response.getAccessToken());
+        assertEquals("new-refresh-token", response.getRefreshToken()); // 갱신되었으므로 new-refresh-token
+        
+        // 새로 저장 X (update 만 수행)
+        verify(refreshTokenRepository, never()).save(any());
     }
     
     @Test
@@ -166,8 +211,7 @@ public class MemberServiceTest {
                 .newPassword("newPassword").build();
         
         // when & then
-        Exception exception = assertThrows(MemberException.class,
-                () -> memberService.changePassword(2L, request));
+        Exception exception = assertThrows(MemberException.class, () -> memberService.changePassword(2L, request));
         assertEquals(USER_NOT_FOUND.getMessage(), exception.getMessage());
     }
     
