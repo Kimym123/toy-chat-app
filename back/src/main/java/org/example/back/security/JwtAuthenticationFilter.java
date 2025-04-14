@@ -18,14 +18,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     
-    private  final JwtTokenProvider jwtTokenProvider;
+    private final JwtTokenProvider jwtTokenProvider;
     
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain
-    ) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
+        
         String token = resolveToken(request);
         
         if (token != null && jwtTokenProvider.validateToken(token)) {
@@ -33,11 +31,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String role = jwtTokenProvider.getRole(token);
             
             // 인증 객체 생성 (UserDetails 없이 간단히 처리)
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(
-                            userId,
-                            null, List.of(new SimpleGrantedAuthority("ROLE_" + role))
-                    );
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userId, null,
+                    List.of(new SimpleGrantedAuthority("ROLE_" + role)));
             
             // SecurityContext 에 등록
             SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -50,7 +45,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private String resolveToken(HttpServletRequest request) {
         String bearer = request.getHeader("Authorization");
         
-        if (bearer != null && bearer.startsWith("Bearer")) {
+        if (bearer != null && bearer.startsWith("Bearer ")) {
             return bearer.substring(7);
         }
         

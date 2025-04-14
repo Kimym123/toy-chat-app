@@ -2,9 +2,9 @@ package org.example.back.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.back.config.SecurityConfig;
-import org.example.back.dto.auth.TokenResponse;
-import org.example.back.dto.member.request.MemberPasswordChangeRequest;
-import org.example.back.dto.member.request.MemberRegisterRequest;
+import org.example.back.dto.auth.response.TokenResponse;
+import org.example.back.dto.auth.request.MemberPasswordChangeRequest;
+import org.example.back.dto.auth.request.MemberRegisterRequest;
 import org.example.back.dto.member.response.MemberResponse;
 import org.example.back.exception.member.MemberException;
 import org.example.back.security.JwtTokenProvider;
@@ -73,10 +73,8 @@ public class MemberControllerTest {
     @WithAnonymousUser
     void 로그인_성공() throws Exception {
         // given
-        TokenResponse tokenResponse = TokenResponse.builder()
-                .accessToken("test-access-token")
-                .refreshToken("test-refresh-token")
-                .build();
+        TokenResponse tokenResponse = TokenResponse.builder().accessToken("test-access-token")
+                .refreshToken("test-refresh-token").build();
         
         when(memberService.login(any())).thenReturn(tokenResponse);
         
