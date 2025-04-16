@@ -22,6 +22,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -75,6 +76,19 @@ public class AuthServiceTest {
             
             assertThat(response.getAccessToken()).isEqualTo("new-access-token");
             assertThat(response.getRefreshToken()).isEqualTo(VALID_REFRESH_TOKEN);
+        }
+        
+        @Test
+        @DisplayName("정상적인 logout 성공")
+        void logout_성공() {
+            // given
+            when(refreshTokenRepository.findByToken(VALID_REFRESH_TOKEN)).thenReturn(Optional.of(refreshToken));
+            
+            //when
+            authService.logout(VALID_REFRESH_TOKEN);
+            
+            // then
+            verify(refreshTokenRepository).delete(refreshToken);
         }
     }
     
@@ -134,6 +148,20 @@ public class AuthServiceTest {
                     () -> authService.refreshAccessToken(VALID_REFRESH_TOKEN));
             
             assertThat(exception.getErrorcode()).isEqualTo(AuthErrorCode.MEMBER_NOT_FOUND);
+        }
+        
+        @Test
+        @DisplayName("RefreshToken 저장소에 없음 -> REFRESH_TOKEN_NOT_FOUND 예외")
+        void 로그아웃_실패_저장된_토큰_없음() {
+            // given
+            when(refreshTokenRepository.findByToken(INVALID_REFRESH_TOKEN)).thenReturn(Optional.empty());
+            
+            // when
+            AuthException exception = assertThrows(AuthException.class, () -> authService.logout(INVALID_REFRESH_TOKEN));
+            
+            // then
+            assertThat(exception.getErrorcode()).isEqualTo(AuthErrorCode.REFRESH_TOKEN_NOT_FOUND);
+            
         }
     }
 }

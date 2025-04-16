@@ -30,7 +30,7 @@ public class AuthService {
             throw new AuthException(AuthErrorCode.INVALID_REFRESH_TOKEN);
         }
         
-        // 토큰에서 사용자 ID 추
+        // 토큰에서 사용자 ID 추출
         Long memberId = jwtTokenProvider.getMemberId(refreshToken);
         log.debug("[Token Refresh] 사용자 ID 추출 성공 memberId= {}", memberId);
         
@@ -56,5 +56,16 @@ public class AuthService {
         log.info("✅ AccessToken 재발급 성공 - memberId={}", memberId);
         
         return MemberTokenResponse.builder().accessToken(newAccessToken).refreshToken(refreshToken).build();
+    }
+    
+    public void logout(String refreshToken) {
+        RefreshToken token = refreshTokenRepository.findByToken(refreshToken)
+                .orElseThrow(() -> {
+                    log.warn("[로그아웃 실패] RefreshToken ");
+                    return new AuthException(AuthErrorCode.REFRESH_TOKEN_NOT_FOUND);
+                });
+        
+        refreshTokenRepository.delete(token);
+        log.info("[로그아웃 성공] RefreshToken 삭제 완료: {}", refreshToken);
     }
 }

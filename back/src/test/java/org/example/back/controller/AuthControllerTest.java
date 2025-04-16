@@ -1,6 +1,7 @@
 package org.example.back.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.back.dto.auth.request.MemberLogoutRequest;
 import org.example.back.dto.auth.request.MemberTokenRefreshRequest;
 import org.example.back.dto.auth.response.MemberTokenResponse;
 import org.example.back.exception.auth.AuthErrorCode;
@@ -39,6 +40,7 @@ public class AuthControllerTest {
     private ObjectMapper objectMapper;
     
     private static final String URL = "/api/token/refresh";
+    private final String logoutUrl = "/api/logout";
     
     private ResultActions postJson(String url, Object body) throws Exception {
         return mockMvc.perform(post(url).with(csrf()) // CSRF 자동 처리
@@ -65,6 +67,17 @@ public class AuthControllerTest {
             postJson(URL, request).andExpect(status().isOk())
                     .andExpect(jsonPath("$.accessToken").value("new-access-token"))
                     .andExpect(jsonPath("$.refreshToken").value(refreshToken));
+        }
+        
+        @Test
+        @DisplayName("정상적인 로그아웃 요청 -> 200 OK")
+        void logout_성공() throws Exception {
+            // given
+            String token = "valid-refresh-token";
+            MemberLogoutRequest request = new MemberLogoutRequest(token);
+            
+            // when & then
+            postJson(logoutUrl, request).andExpect(status().isOk());
         }
     }
     
@@ -125,6 +138,34 @@ public class AuthControllerTest {
             // when & then
             postJson(URL, request).andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.message").value(AuthErrorCode.MEMBER_NOT_FOUND.getMessage()));
+        }
+        
+        @Test
+        @DisplayName("RefreshToken 이 DB 에 없음 -> 404 Not Found")
+        void logout_실패_토큰없음() throws Exception {
+            // given
+            String notFoundToken = "not-found-token";
+            MemberLogoutRequest request = new MemberLogoutRequest(notFoundToken);
+            
+            doThrow(new AuthException(AuthErrorCode.REFRESH_TOKEN_NOT_FOUND))
+                    .when(authService).logout(notFoundToken);
+            
+            // when & then
+            postJson(logoutUrl, request)
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.message").value(AuthErrorCode.REFRESH_TOKEN_NOT_FOUND.getMessage()));
+        }
+        
+        @Test
+        @DisplayName("RefreshToken 미입력 -> 400 Bad Request")
+        void logout_실패_빈값() throws Exception {
+            // given
+            MemberLogoutRequest request = new MemberLogoutRequest("");
+            
+            // when & then
+            postJson(logoutUrl, request)
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.message", containsString("RefreshToken 은 필수입니다.")));
         }
     }
 }
