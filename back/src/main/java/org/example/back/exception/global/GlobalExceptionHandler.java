@@ -15,7 +15,7 @@ public class GlobalExceptionHandler {
     
     @ExceptionHandler(MemberException.class)
     public ResponseEntity<ErrorResponse> handleMemberException(MemberException exception) {
-        ErrorCode errorCode = exception.getErrorcode();
+        ErrorCode errorCode = exception.getErrorCode();
         // 현재는 handleCustomException 와 다를 것이 없지만 어떻게 확장할지 몰라서 일단은 만들어놓음.
         return ResponseEntity.status(errorCode.getStatus())
                 .body(ErrorResponse.of(errorCode.getStatus().value(), errorCode.getMessage()));
@@ -23,7 +23,7 @@ public class GlobalExceptionHandler {
     
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<ErrorResponse> handleCustomException(CustomException exception) {
-        ErrorCode errorCode = exception.getErrorcode();
+        ErrorCode errorCode = exception.getErrorCode();
         return ResponseEntity.status(errorCode.getStatus())
                 .body(ErrorResponse.of(errorCode.getStatus().value(), errorCode.getMessage()));
     }

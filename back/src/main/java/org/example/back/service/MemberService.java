@@ -4,15 +4,18 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.back.domain.auth.RefreshToken;
 import org.example.back.domain.member.Member;
-import org.example.back.dto.auth.response.TokenResponse;
 import org.example.back.dto.auth.request.MemberLoginRequest;
 import org.example.back.dto.auth.request.MemberPasswordChangeRequest;
 import org.example.back.dto.auth.request.MemberRegisterRequest;
+import org.example.back.dto.auth.response.TokenResponse;
 import org.example.back.dto.member.response.MemberResponse;
 import org.example.back.exception.member.MemberException;
 import org.example.back.repository.MemberRepository;
 import org.example.back.repository.auth.RefreshTokenRepository;
 import org.example.back.security.JwtTokenProvider;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +32,7 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final AuthenticationManager authenticationManager;
     
     // 중복 코드 제거용
     private Member findMemberById(Long id) {
@@ -65,12 +69,13 @@ public class MemberService {
     
     // 로그인
     public TokenResponse login(MemberLoginRequest request) {
-        Member member = memberRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new MemberException(USER_NOT_FOUND));
         
-        if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
-            throw new MemberException(INVALID_PASSWORD);
-        }
+        // Spring Security 의 내부 인증 로직 실행 (UserDetailsService + PasswordEncoder 사용)
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+        );
+        
+        Member member = (Member) authentication.getPrincipal();
         
         // 토큰 발급
         // TODO 지금은 USER 하드코딩 -> 추후 리팩토링

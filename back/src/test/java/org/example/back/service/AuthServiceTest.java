@@ -104,7 +104,7 @@ public class AuthServiceTest {
             AuthException exception = assertThrows(AuthException.class,
                     () -> authService.refreshAccessToken(INVALID_REFRESH_TOKEN));
             
-            assertThat(exception.getErrorcode()).isEqualTo(AuthErrorCode.INVALID_REFRESH_TOKEN);
+            assertThat(exception.getErrorCode()).isEqualTo(AuthErrorCode.INVALID_REFRESH_TOKEN);
         }
         
         @Test
@@ -117,7 +117,7 @@ public class AuthServiceTest {
             AuthException exception = assertThrows(AuthException.class,
                     () -> authService.refreshAccessToken(VALID_REFRESH_TOKEN));
             
-            assertThat(exception.getErrorcode()).isEqualTo(AuthErrorCode.REFRESH_TOKEN_NOT_FOUND);
+            assertThat(exception.getErrorCode()).isEqualTo(AuthErrorCode.REFRESH_TOKEN_NOT_FOUND);
         }
         
         @Test
@@ -133,7 +133,7 @@ public class AuthServiceTest {
             AuthException exception = assertThrows(AuthException.class,
                     () -> authService.refreshAccessToken(VALID_REFRESH_TOKEN));
             
-            assertThat(exception.getErrorcode()).isEqualTo(AuthErrorCode.REFRESH_TOKEN_MISMATCH);
+            assertThat(exception.getErrorCode()).isEqualTo(AuthErrorCode.REFRESH_TOKEN_MISMATCH);
         }
         
         @Test
@@ -147,7 +147,7 @@ public class AuthServiceTest {
             AuthException exception = assertThrows(AuthException.class,
                     () -> authService.refreshAccessToken(VALID_REFRESH_TOKEN));
             
-            assertThat(exception.getErrorcode()).isEqualTo(AuthErrorCode.MEMBER_NOT_FOUND);
+            assertThat(exception.getErrorCode()).isEqualTo(AuthErrorCode.MEMBER_NOT_FOUND);
         }
         
         @Test
@@ -160,7 +160,7 @@ public class AuthServiceTest {
             AuthException exception = assertThrows(AuthException.class, () -> authService.logout(INVALID_REFRESH_TOKEN));
             
             // then
-            assertThat(exception.getErrorcode()).isEqualTo(AuthErrorCode.REFRESH_TOKEN_NOT_FOUND);
+            assertThat(exception.getErrorCode()).isEqualTo(AuthErrorCode.REFRESH_TOKEN_NOT_FOUND);
             
         }
     }

@@ -17,8 +17,16 @@ spring:
       mode: always  # data.sql, schema.sql 실행
 
 springdoc:
+  paths-to-match: /api/**
   api-docs:
     enabled: true
   swagger-ui:
+    enabled: true
     path: /swagger-ui.html
     operationsSorter: method
+
+logging:
+  level:
+    org.example.back: DEBUG
+  file:
+    name: logs/dev.log

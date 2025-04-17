@@ -21,3 +21,9 @@ springdoc:
     enabled: false
   swagger-ui:
     enabled: false
+
+logging:
+  level:
+    org.example.back: WARN
+  file:
+    name: logs/prod.log
