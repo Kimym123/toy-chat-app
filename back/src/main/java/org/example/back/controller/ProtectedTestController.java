@@ -1,5 +1,6 @@
 package org.example.back.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -7,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@SecurityRequirement(name = "BearerAuth")
 @Tag(name = "보호된 API", description = "JWT 인증 후 접근 가능한 테스트 API")
 @RestController
 @RequestMapping("/api/test")

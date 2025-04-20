@@ -18,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
 @RequiredArgsConstructor
@@ -39,9 +40,10 @@ public class SecurityConfig {
     
     // Swagger API Security 설정 (ADMIN 권한 + HTTP Basic)
     @Bean
-    public SecurityFilterChain swaggerSecurityFilterChain(HttpSecurity http) throws Exception {
-        http.securityMatcher("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")  // Swagger 관련 경로에만 적용
-                .authorizeHttpRequests(auth -> auth.anyRequest().hasRole("ADMIN")) // Swagger 접근 권한: ADMIN만 허용
+    public SecurityFilterChain swaggerSecurityFilterChain(HttpSecurity http,
+            CorsConfigurationSource corsConfigurationSource) throws Exception {
+        http.cors(cors -> cors.configurationSource(corsConfigurationSource)).securityMatcher("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")  // Swagger 관련 경로에만 적용
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
                 .httpBasic(httpBasic -> httpBasic.realmName("Swagger API"))  // HTTP Basic 인증 사용
                 .csrf(csrf -> csrf.disable());  // CSRF 보호 비활성화
         
@@ -50,8 +52,9 @@ public class SecurityConfig {
     
     // 일반 API Security 설정 (JWT + Role 기반 인가 + Stateless)
     @Bean
-    public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
-        http.authorizeHttpRequests(auth -> auth.requestMatchers("/home", "/api/members/login", "/api/members/register").permitAll()  // 인증 없이 접근 가능
+    public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http,
+            CorsConfigurationSource corsConfigurationSource) throws Exception {
+        http.cors(cors -> cors.configurationSource(corsConfigurationSource)).authorizeHttpRequests(auth -> auth.requestMatchers("/home", "/api/members/login", "/api/members/register").permitAll()  // 인증 없이 접근 가능
                         .requestMatchers("/admin/**").hasRole("ADMIN") // ADMIN 만 접근 가능
                         .requestMatchers("/user/**").hasRole("USER") // USER 만 접근 가능
                         .anyRequest().authenticated()) // 나머지 모든 요청은 인증 필요
