@@ -31,6 +31,7 @@ public class ChatRoom extends BaseTimeEntity {
     private String name;
     
     // 삭제된 방인지 여부 (soft delete 구현용)
+    @Builder.Default
     @Column(nullable = false)
     private Boolean isDeleted = false;
     
