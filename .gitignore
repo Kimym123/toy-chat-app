@@ -65,6 +65,7 @@ out/
 back/gradle/wrapper/gradle-wrapper.jar
 back/gradlew
 back/gradlew.bat
+back/build
 
 front/package-lock.json
 front/public
