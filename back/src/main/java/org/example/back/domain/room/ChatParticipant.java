@@ -1,7 +1,19 @@
 package org.example.back.domain.room;
 
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.example.back.domain.base.BaseTimeEntity;
 import org.example.back.domain.member.Member;
 
@@ -31,7 +43,6 @@ public class ChatParticipant extends BaseTimeEntity {
     @JoinColumn(name = "chat_room_id", nullable = false)
     private ChatRoom chatRoom;
     
-    
     // 읽음 처리용
     @Column
     private Long lastReadMessageId;
@@ -39,5 +50,12 @@ public class ChatParticipant extends BaseTimeEntity {
     // 메시지 읽음 상태 업데이트, 사용자가 마지막으로 읽은 메시지 ID 갱
     public void updateLastReadMessage(Long messageId) {
         this.lastReadMessageId = messageId;
+    }
+    
+    public static ChatParticipant create(ChatRoom chatRoom, Member member) {
+        return ChatParticipant.builder()
+                .chatRoom(chatRoom)
+                .member(member)
+                .build();
     }
 }

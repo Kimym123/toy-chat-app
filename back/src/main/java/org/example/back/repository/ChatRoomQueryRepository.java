@@ -1,15 +1,17 @@
 package org.example.back.repository;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.example.back.domain.room.ChatRoom;
 import org.example.back.domain.room.ChatRoomType;
 import org.example.back.domain.room.QChatParticipant;
 import org.example.back.domain.room.QChatRoom;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.Optional;
 
 /*
  * 채팅방 관련 조회용 QueryDSL Repository
@@ -24,8 +26,9 @@ public class ChatRoomQueryRepository {
     private final QChatParticipant chatParticipant = QChatParticipant.chatParticipant;
     
     // 사용자가 참여 중인 채팅방 목록 조회 (페이징)
-    public List<ChatRoom> findMyChatRooms(Long memberId, int offset, int limit) {
-        return queryFactory
+    public Page<ChatRoom> findMyChatRooms(Long memberId, Pageable pageable) {
+        
+        List<ChatRoom> results = queryFactory
                 .select(chatRoom)
                 .from(chatRoom)
                 .join(chatParticipant)
@@ -35,9 +38,22 @@ public class ChatRoomQueryRepository {
                         chatRoom.isDeleted.isFalse()
                 )
                 .orderBy(chatRoom.updatedAt.desc())
-                .offset(offset)
-                .limit(limit)
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
                 .fetch();
+        
+        Long total = queryFactory
+                .select(chatRoom.count())
+                .from(chatRoom)
+                .join(chatParticipant)
+                .on(chatParticipant.chatRoom.eq(chatRoom))
+                .where(
+                        chatParticipant.member.id.eq(memberId),
+                        chatRoom.isDeleted.isFalse()
+                )
+                .fetchOne();
+        
+        return new PageImpl<>(results, pageable, total == null ? 0 : total);
     }
     
     // 내가 참여 중인 채팅방 수 조회
