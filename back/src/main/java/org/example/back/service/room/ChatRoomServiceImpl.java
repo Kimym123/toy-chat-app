@@ -4,7 +4,9 @@ import static org.example.back.exception.member.MemberErrorCode.USER_NOT_FOUND;
 
 import jakarta.persistence.EntityNotFoundException;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +25,8 @@ import org.example.back.repository.ChatRoomQueryRepository;
 import org.example.back.repository.ChatRoomRepository;
 import org.example.back.repository.MemberRepository;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,7 +57,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                         request.getTargetMemberId())
                 .map(chatRoom -> {
                     // 기존 방 찾기 -> 응답
-                    List<Long> participantIds = getParticipantIds(chatRoom.getId());
+                    List<Long> participantIds = getParticipantIds(chatRoom);
                     
                     return ChatRoomResponse.from(chatRoom, participantIds);
                 })
@@ -82,16 +86,17 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     public ChatRoomResponse createGroupChatRoom(Long requestedId,
             CreateGroupChatRoomRequest request) {
         
-        Member requester = findMemberById(requestedId);
-        
-        // 요청자 ID + 기타 멤버 ID 리스트 구성
-        List<Long> allMemberIds = new ArrayList<>(request.getMemberIds());
-        if (!allMemberIds.contains(requestedId)) {
-            allMemberIds.add(requestedId);
+        if (request.getName() == null || request.getName().trim().isEmpty()) {
+            throw new IllegalArgumentException("채팅방 이름은 비어 있을 수 없습니다");
         }
         
+        // 중복 제거 + 순서 유지 + 요청자 포함
+        Set<Long> allMemberIds = new LinkedHashSet<>(request.getMemberIds());
+        allMemberIds.add(requestedId); // 요청자 포함
+        
         // 전체 멤버 조회
-        List<Member> members = memberRepository.findAllById(allMemberIds);
+        List<Member> members = memberRepository.findAllById(new ArrayList<>(allMemberIds));
+        
         if (members.size() != allMemberIds.size()) {
             throw new IllegalArgumentException("일부 회원 ID 가 유효하지 않습니다.");
         }
@@ -118,14 +123,23 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     @Override
     public Page<ChatRoomResponse> getMyChatRooms(Long memberId, Pageable pageable) {
         
-        // 채팅방 목록 조회 (QueryDSL)
-        Page<ChatRoom> chatRooms = chatRoomQueryRepository.findMyChatRooms(memberId, pageable);
+        // pageable 이 없는 경우 기본 값
+        pageable = (pageable != null) ? pageable : PageRequest.of(0, 20);
         
-        return chatRooms.map(chatRoom -> {
-            List<Long> participantIds = getParticipantIds(chatRoom.getId());
-            
-            return ChatRoomResponse.from(chatRoom, participantIds);
-        });
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(()-> new MemberException(USER_NOT_FOUND));
+        
+        // 채팅방 목록 조회 (QueryDSL)
+        Page<ChatRoom> chatRooms = chatRoomQueryRepository.findMyChatRooms(member.getId(), pageable);
+        
+        List<ChatRoomResponse> filtered = chatRooms.getContent().stream()
+                .filter(chatRoom -> !chatRoom.getIsDeleted())
+                .map(chatRoom -> {
+                    List<Long> participantIds = getParticipantIds(chatRoom);
+                    return ChatRoomResponse.from(chatRoom, participantIds);
+                }).toList();
+        
+        return new PageImpl<>(filtered, pageable, filtered.size());
     }
     
     @Override
@@ -139,7 +153,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         }
         
         // 기존 참여자 ID 목록
-        List<Long> existingMemberIds = getParticipantIds(chatRoom.getId());
+        List<Long> existingMemberIds = getParticipantIds(chatRoom);
         
         // 요청된 멤버 중 기존 참여자 제외한 목록
         List<Member> newMembers = memberRepository.findAllById(request.getMemberIds())
@@ -152,7 +166,9 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                 .map(member -> ChatParticipant.create(chatRoom, member))
                 .toList();
         
-        chatParticipantRepository.saveAll(newParticipants);
+        if (!newParticipants.isEmpty()) {
+            chatParticipantRepository.saveAll(newParticipants);
+        }
     }
     
     @Override
@@ -180,6 +196,11 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     public void softDeleteChatRoom(Long chatRoomId, Long memberId) {
         ChatRoom chatRoom = findChatRoomById(chatRoomId);
         
+        // 이미 삭제된 채팅방이면 조기 종료
+        if (chatRoom.getIsDeleted()) {
+            throw new IllegalArgumentException("이미 삭제된 채팅방입니다.");
+        }
+        
         boolean isParticipant = chatParticipantRepository.findByChatRoomId(chatRoomId).stream()
                 .anyMatch(cp -> cp.getMember().getId().equals(memberId));
         
@@ -201,8 +222,16 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                         () -> new EntityNotFoundException("ChatRoom not found: " + chatRoomId));
     }
     
-    private List<Long> getParticipantIds(Long chatRoomId) {
-        return chatParticipantRepository.findByChatRoomId(chatRoomId).stream()
+    private List<Long> getParticipantIds(ChatRoom chatRoom) {
+        
+        List<ChatParticipant> participants = chatParticipantRepository.findByChatRoomId(
+                chatRoom.getId());
+        
+        if (participants.isEmpty()) {
+            throw new IllegalArgumentException("채팅방에 참여자가 없습니다. chatRoomId=" + chatRoom.getId());
+        }
+        
+        return participants.stream()
                 .map(cp -> cp.getMember().getId())
                 .sorted()
                 .toList();
