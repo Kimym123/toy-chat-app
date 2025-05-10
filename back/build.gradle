@@ -39,6 +39,7 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
 
     // Jwt 관련 라이브러리
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
