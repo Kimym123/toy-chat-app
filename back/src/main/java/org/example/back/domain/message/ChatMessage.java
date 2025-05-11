@@ -30,7 +30,7 @@ public class ChatMessage extends BaseTimeEntity {
     // 보낸 사람
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_id", nullable = false)
-    private Member member;
+    private Member sender;
     
     // 메시지 내용
     @Lob

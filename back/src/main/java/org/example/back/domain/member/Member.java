@@ -31,6 +31,9 @@ public class Member extends BaseTimeEntity {
     @Column(unique = true)
     private String phone;
     
+    @Column
+    private String profileImageUrl;
+    
     public Member(String username, String password, String nickname, String email, String phone) {
         this.username = username;
         this.password = password;

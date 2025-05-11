@@ -1,0 +1,32 @@
+package org.example.back.service.message;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import java.util.List;
+import org.example.back.domain.message.ChatMessage;
+import org.example.back.dto.message.request.ChatMessageRequest;
+import org.example.back.dto.message.response.ChatMessageResponse;
+import org.springframework.data.domain.Pageable;
+
+public interface ChatMessageService {
+    
+    // 채팅 메시지를 저장한다.
+    @Operation(summary = "채팅 메시지 저장", description = "채탕방 ID, 전송자 ID, 내용 등을 받아 메시지를 저장한다.")
+    ChatMessage saveMessage(
+            @Parameter(description = "메시지 저장 요청 DTO") ChatMessageRequest request
+    );
+    
+    // 채팅방의 메시지를 페이징 형태로 조회한다.
+    @Operation(summary = "채팅 메시지 목록 조회", description = "특정 채팅방의 메시지들을 페이지 단위로 조회한다.")
+    List<ChatMessageResponse> getMessages(
+            @Parameter(description = "채팅방 ID") Long chatRoomId,
+            @Parameter(description = "페이징 정보") Pageable pageable
+    );
+    
+    // 최근 채팅 메시지 N 개를 조회한다.
+    @Operation(summary = "최근 채팅 메시지 조회", description = "채팅방에서 가장 최신 메시지 N 개를 조회한다.")
+    List<ChatMessageResponse> getRecentMessages(
+            @Parameter(description = "채팅방 ID") Long chatRoomId,
+            @Parameter(description = "조회할 메시지 수") int limit
+    );
+}

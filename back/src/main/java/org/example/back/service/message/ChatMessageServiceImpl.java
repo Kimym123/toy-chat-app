@@ -1,0 +1,102 @@
+package org.example.back.service.message;
+
+import java.util.ArrayList;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.example.back.domain.member.Member;
+import org.example.back.domain.message.ChatMessage;
+import org.example.back.domain.room.ChatRoom;
+import org.example.back.dto.message.request.ChatMessageRequest;
+import org.example.back.dto.message.response.ChatMessageResponse;
+import org.example.back.repository.message.ChatMessageQueryRepository;
+import org.example.back.repository.message.ChatMessageRepository;
+import org.example.back.repository.ChatParticipantRepository;
+import org.example.back.repository.room.ChatRoomQueryRepository;
+import org.example.back.repository.room.ChatRoomRepository;
+import org.example.back.repository.MemberRepository;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class ChatMessageServiceImpl implements ChatMessageService{
+    
+    private final ChatRoomRepository chatRoomRepository;
+    private final ChatRoomQueryRepository chatRoomQueryRepository;
+    private final ChatMessageRepository chatMessageRepository;
+    private final MemberRepository memberRepository;
+    private final ChatParticipantRepository chatParticipantRepository;
+    private final ChatMessageQueryRepository chatMessageQueryRepository;
+    
+    @Override
+    @Transactional
+    public ChatMessage saveMessage(ChatMessageRequest request) {
+        
+        log.debug("메시지 저장 요청: {}", request);
+        
+        ChatRoom room = chatRoomRepository.findById(request.getChatRoomId())
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 채팅방 요청 - chatRoomId: {}", request.getChatRoomId());
+                    return new IllegalArgumentException("채팅방이 존재하지 않습니다.");
+                });
+        
+        if (room.getIsDeleted()) {
+            log.warn("삭제된 채팅방으로 메시지 전송 시도 - chatRoomId: {}", request.getChatRoomId());
+            throw new IllegalArgumentException("삭제된 채팅방입니다.");
+        }
+        
+        Member sender = memberRepository.findById(request.getSenderId())
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 사용자 요청 - senderId: {}", request.getSenderId());
+                    return new IllegalArgumentException("전송자가 존재하지 않습니다.");
+                });
+        
+        if (chatParticipantRepository.findByChatRoomIdAndMemberId(room.getId(), sender.getId()).isEmpty()) {
+            log.warn("메시지 전송 요청자는 참여자가 아님 - senderId: {}, chatRoomId: {}", sender.getId(), room.getId());
+            throw new IllegalArgumentException("채팅방 참여자가 아닙니다.");
+        }
+        
+        ChatMessage message = ChatMessage.builder()
+                .chatRoom(room)
+                .sender(sender)
+                .content(request.getContent())
+                .messageType(request.getType())
+                .build();
+        
+        ChatMessage saved = chatMessageRepository.save(message);
+        log.info("메시지 저장 완료 - id: {}, roomId: {}", saved.getId(), saved.getChatRoom().getId());
+        return saved;
+    }
+    
+    @Override
+    public List<ChatMessageResponse> getMessages(Long chatRoomId, Pageable pageable) {
+        log.debug("메시지 리스트 조회 요청 - roomId: {}, page: {}", chatRoomId, pageable.getPageNumber());
+        List<ChatMessage> messages = chatMessageQueryRepository.findMessagesByChatRoomId(chatRoomId, pageable);
+        
+        List<ChatMessageResponse> responseList = new ArrayList<>();
+        
+        for (ChatMessage message : messages) {
+            responseList.add(ChatMessageResponse.from(message));
+        }
+        
+        return responseList;
+    }
+    
+    @Override
+    public List<ChatMessageResponse> getRecentMessages(Long chatRoomId, int limit) {
+        log.debug("최근 메시지 {} 개 조회 요청 - roomId: {}", limit, chatRoomId);
+        List<ChatMessage> messages = chatMessageQueryRepository.findRecentMessagesByChatRoomId(chatRoomId, limit);
+        
+        List<ChatMessageResponse> responseList = new ArrayList<>();
+        
+        for (ChatMessage message : messages) {
+            responseList.add(ChatMessageResponse.from(message));
+        }
+        
+        return responseList;
+    }
+}
