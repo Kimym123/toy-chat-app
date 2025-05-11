@@ -1,4 +1,4 @@
-package org.example.back.repository;
+package org.example.back.repository.room;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
