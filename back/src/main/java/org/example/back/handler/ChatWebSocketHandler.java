@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.back.domain.message.ChatMessage;
 import org.example.back.dto.message.request.ChatMessageRequest;
 import org.example.back.dto.message.response.ChatMessageResponse;
-import org.example.back.service.message.ChatMessageServiceImpl;
+import org.example.back.service.message.ChatMessageService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -27,7 +27,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 public class ChatWebSocketHandler extends TextWebSocketHandler {
     
     private final ObjectMapper objectMapper;
-    private final ChatMessageServiceImpl chatMessageService;
+    private final ChatMessageService chatMessageService;
     
     // 채팅방 ID 과 연결된 WebSocketSession 리스트 (브로드캐스트용)
     private static final Map<Long, List<WebSocketSession>> roomSessions = new ConcurrentHashMap<>();
@@ -88,14 +88,33 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage textMessage) {
         try {
+            
             String payload = textMessage.getPayload();
             log.debug("메시지 수신: {}", payload);
             
             // JSON -> DTO 변환
             ChatMessageRequest request = objectMapper.readValue(payload, ChatMessageRequest.class);
             
-            // 메시지 저장
-            ChatMessage savedMessage = chatMessageService.saveMessage(request);
+            if (request.getType() == null) {
+                log.warn("메시지 타입 누락: {}", payload);
+                return;
+            }
+            
+            // 메시지 선언
+            ChatMessage savedMessage;
+            
+            switch (request.getType()) {
+                case TEXT:
+                    savedMessage = chatMessageService.saveTextMessage(request);
+                    break;
+                case IMAGE:
+                case FILE:
+                    savedMessage = chatMessageService.saveFileMessage(request);
+                    break;
+                default:
+                    log.warn("지원하지 않는 메시지 타입: {}", request.getType());
+                    return;
+            }
             
             // 메시지 변환
             ChatMessageResponse response = ChatMessageResponse.from(savedMessage);

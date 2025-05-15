@@ -16,6 +16,18 @@ public interface ChatMessageService {
             @Parameter(description = "메시지 저장 요청 DTO") ChatMessageRequest request
     );
     
+    // saveMessage 재활용하여 텍스트 메시지를 저장한다.
+    @Operation(summary = "텍스트 메시지 저장", description = "TEXT 메시지를 저장한다.")
+    ChatMessage saveTextMessage(
+            @Parameter(description = "메시지 요청 DTO") ChatMessageRequest request
+    );
+    
+    // saveMessage 재활용하여 파일, 이미지 메시지를 저장한다.
+    @Operation(summary = "파일/이미지 메시지 저장", description = "FILE, IMAGE 메시지를 저장한다.")
+    ChatMessage saveFileMessage(
+            @Parameter(description = "메시지 요청 DTO") ChatMessageRequest request
+    );
+    
     // 채팅방의 메시지를 페이징 형태로 조회한다.
     @Operation(summary = "채팅 메시지 목록 조회", description = "특정 채팅방의 메시지들을 페이지 단위로 조회한다.")
     List<ChatMessageResponse> getMessages(

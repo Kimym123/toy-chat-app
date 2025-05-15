@@ -9,12 +9,12 @@ import org.example.back.domain.message.ChatMessage;
 import org.example.back.domain.room.ChatRoom;
 import org.example.back.dto.message.request.ChatMessageRequest;
 import org.example.back.dto.message.response.ChatMessageResponse;
+import org.example.back.repository.ChatParticipantRepository;
+import org.example.back.repository.MemberRepository;
 import org.example.back.repository.message.ChatMessageQueryRepository;
 import org.example.back.repository.message.ChatMessageRepository;
-import org.example.back.repository.ChatParticipantRepository;
 import org.example.back.repository.room.ChatRoomQueryRepository;
 import org.example.back.repository.room.ChatRoomRepository;
-import org.example.back.repository.MemberRepository;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class ChatMessageServiceImpl implements ChatMessageService{
+public class ChatMessageServiceImpl implements ChatMessageService {
     
     private final ChatRoomRepository chatRoomRepository;
     private final ChatRoomQueryRepository chatRoomQueryRepository;
@@ -55,8 +55,10 @@ public class ChatMessageServiceImpl implements ChatMessageService{
                     return new IllegalArgumentException("전송자가 존재하지 않습니다.");
                 });
         
-        if (chatParticipantRepository.findByChatRoomIdAndMemberId(room.getId(), sender.getId()).isEmpty()) {
-            log.warn("메시지 전송 요청자는 참여자가 아님 - senderId: {}, chatRoomId: {}", sender.getId(), room.getId());
+        if (chatParticipantRepository.findByChatRoomIdAndMemberId(room.getId(), sender.getId())
+                .isEmpty()) {
+            log.warn("메시지 전송 요청자는 참여자가 아님 - senderId: {}, chatRoomId: {}", sender.getId(),
+                    room.getId());
             throw new IllegalArgumentException("채팅방 참여자가 아닙니다.");
         }
         
@@ -73,9 +75,39 @@ public class ChatMessageServiceImpl implements ChatMessageService{
     }
     
     @Override
+    @Transactional
+    public ChatMessage saveTextMessage(ChatMessageRequest request) {
+        log.debug("텍스트 메시지 저장 요청: {}", request);
+        
+        if (request.getContent() == null || request.getContent().isBlank()) {
+            log.warn("TEXT 메시지 내용이 비어 있음");
+            throw new IllegalArgumentException("텍스트 메시지에는 content가 필요합니다.");
+        }
+        
+        return saveMessage(request);
+    }
+    
+    @Override
+    @Transactional
+    public ChatMessage saveFileMessage(ChatMessageRequest request) {
+        log.debug("파일 메시지 저장 요청: {}", request);
+        
+        if (request.getFileUrl() == null || request.getFileUrl().isBlank()) {
+            log.warn("fileUrl 누락 - FILE/IMAGE 메시지");
+            throw new IllegalArgumentException("파일 메시지에는 fileUrl이 필요합니다.");
+        }
+        
+        // fileUrl을 content 필드에 매핑
+        request.setContent(request.getFileUrl());
+        
+        return saveMessage(request); // 기존 saveMessage 재활용
+    }
+    
+    @Override
     public List<ChatMessageResponse> getMessages(Long chatRoomId, Pageable pageable) {
         log.debug("메시지 리스트 조회 요청 - roomId: {}, page: {}", chatRoomId, pageable.getPageNumber());
-        List<ChatMessage> messages = chatMessageQueryRepository.findMessagesByChatRoomId(chatRoomId, pageable);
+        List<ChatMessage> messages = chatMessageQueryRepository.findMessagesByChatRoomId(chatRoomId,
+                pageable);
         
         List<ChatMessageResponse> responseList = new ArrayList<>();
         
@@ -89,7 +121,8 @@ public class ChatMessageServiceImpl implements ChatMessageService{
     @Override
     public List<ChatMessageResponse> getRecentMessages(Long chatRoomId, int limit) {
         log.debug("최근 메시지 {} 개 조회 요청 - roomId: {}", limit, chatRoomId);
-        List<ChatMessage> messages = chatMessageQueryRepository.findRecentMessagesByChatRoomId(chatRoomId, limit);
+        List<ChatMessage> messages = chatMessageQueryRepository.findRecentMessagesByChatRoomId(
+                chatRoomId, limit);
         
         List<ChatMessageResponse> responseList = new ArrayList<>();
         
