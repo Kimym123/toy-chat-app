@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.back.domain.message.ChatMessage;
 import org.example.back.dto.message.request.ChatMessageRequest;
 import org.example.back.dto.message.response.ChatMessageResponse;
+import org.example.back.repository.MemberRepository;
 import org.example.back.service.message.ChatMessageService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
@@ -31,6 +32,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     
     // 채팅방 ID 과 연결된 WebSocketSession 리스트 (브로드캐스트용)
     private static final Map<Long, List<WebSocketSession>> roomSessions = new ConcurrentHashMap<>();
+    private final MemberRepository memberRepository;
     
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws IOException {
@@ -58,6 +60,10 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                         k -> Collections.synchronizedList(new ArrayList<>()))
                 .add(session);
         log.info("채팅방 {} 에 사용자 {} 연결됨", chatRoomId, memberId);
+        
+        // SYSTEM 메시지 전송
+        String nickname = memberRepository.findById(memberId).orElseThrow().getNickname();
+        chatMessageService.sendSystemMessage(chatRoomId, nickname + "님이 입장했습니다.");
     }
     
     private Long extractRoomId(WebSocketSession session) {
@@ -150,7 +156,10 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         
         log.info("연결 종료: {}, status: {}", session.getId(), status);
         
-        // 모든 채팅방 세션 목록에서 세션 제
+        Long memberId = getMemberId(session);
+        Long chatRoomId = extractRoomId(session);
+        
+        // 모든 채팅방 세션 목록에서 세션 제거
         roomSessions.forEach((roomId, sessions) -> {
             synchronized (sessions) {
                 sessions.remove(session);
@@ -160,6 +169,10 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                 }
             }
         });
+        
+        // SYSTEM 메시지 전송
+        String nickname = memberRepository.findById(memberId).orElseThrow().getNickname();
+        chatMessageService.sendSystemMessage(chatRoomId, nickname + "님이 퇴장하셨습니다.");
     }
     
     @Override

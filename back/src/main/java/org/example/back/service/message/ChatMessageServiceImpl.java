@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.back.domain.member.Member;
 import org.example.back.domain.message.ChatMessage;
+import org.example.back.domain.message.MessageType;
 import org.example.back.domain.room.ChatRoom;
 import org.example.back.dto.message.request.ChatMessageRequest;
 import org.example.back.dto.message.response.ChatMessageResponse;
@@ -131,5 +132,27 @@ public class ChatMessageServiceImpl implements ChatMessageService {
         }
         
         return responseList;
+    }
+    
+    @Override
+    public ChatMessage sendSystemMessage(Long chatRoomId, String content) {
+        log.debug("시스템 메시지 전송 요청 - roomId: {}, content: {}", chatRoomId, content);
+        
+        ChatRoom room = chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 채팅방 요청 - chatRoomId: {}", chatRoomId);
+                    return new IllegalArgumentException("채팅방이 존재하지 않습니다.");
+                });
+        
+        ChatMessage message = ChatMessage.builder()
+                .chatRoom(room)
+                .sender(null)
+                .content(content)
+                .messageType(MessageType.SYSTEM)
+                .build();
+        
+        chatMessageRepository.save(message);
+        
+        return message;
     }
 }

@@ -28,8 +28,9 @@ public class ChatMessage extends BaseTimeEntity {
     private ChatRoom chatRoom;
     
     // 보낸 사람
+    // SYSTEM 메시지 대응 위해 sender는 null 허용됨
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sender_id", nullable = false)
+    @JoinColumn(name = "sender_id")
     private Member sender;
     
     // 메시지 내용

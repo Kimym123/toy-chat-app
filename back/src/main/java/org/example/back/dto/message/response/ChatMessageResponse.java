@@ -26,7 +26,7 @@ public class ChatMessageResponse {
     @Schema(description = "메시지 내용", example = "테스트입니다!")
     private String content;
     
-    @Schema(description = "메시지 타입", example = "TEXT")
+    @Schema(description = "메시지 타입", example = "TEXT / IMAGE / FILE / SYSTEM")
     private MessageType type;
     
     @Schema(description = "메시지 생성 시각")
@@ -59,11 +59,19 @@ public class ChatMessageResponse {
                 .content(message.getContent())
                 .type(message.getMessageType())
                 .createdAt(message.getCreatedAt())
-                .sender(SenderDto.builder()
-                        .id(sender.getId())
-                        .username(sender.getUsername())
-                        .profileImageUrl(sender.getProfileImageUrl())
-                        .build())
+                .sender(buildSenderDto(sender))
+                .build();
+    }
+    
+    private static SenderDto buildSenderDto(Member sender) {
+        if (sender == null) {
+            return null;
+        }
+        
+        return SenderDto.builder()
+                .id(sender.getId())
+                .username(sender.getUsername())
+                .profileImageUrl(sender.getProfileImageUrl())
                 .build();
     }
 }

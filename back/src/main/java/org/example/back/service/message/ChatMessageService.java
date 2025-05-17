@@ -41,4 +41,11 @@ public interface ChatMessageService {
             @Parameter(description = "채팅방 ID") Long chatRoomId,
             @Parameter(description = "조회할 메시지 수") int limit
     );
+    
+    // 시스템 메시지를 전송한다.
+    @Operation(summary = "시스템 메시지 전송", description = "입장/퇴장 등의 시스템 메시지를 전송한다.")
+    ChatMessage sendSystemMessage(
+            @Parameter(description = "채팅방 ID") Long chatRoomId,
+            @Parameter(description = "메시지 내용") String content
+    );
 }
