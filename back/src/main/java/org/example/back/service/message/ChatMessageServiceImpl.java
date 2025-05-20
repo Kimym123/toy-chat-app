@@ -10,7 +10,7 @@ import org.example.back.domain.message.MessageType;
 import org.example.back.domain.room.ChatRoom;
 import org.example.back.dto.message.request.ChatMessageRequest;
 import org.example.back.dto.message.response.ChatMessageResponse;
-import org.example.back.repository.ChatParticipantRepository;
+import org.example.back.repository.participant.ChatParticipantRepository;
 import org.example.back.repository.MemberRepository;
 import org.example.back.repository.message.ChatMessageQueryRepository;
 import org.example.back.repository.message.ChatMessageRepository;

@@ -1,4 +1,4 @@
-package org.example.back.repository;
+package org.example.back.repository.participant;
 
 import java.util.List;
 import java.util.Optional;

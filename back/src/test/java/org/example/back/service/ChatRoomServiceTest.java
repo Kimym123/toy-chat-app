@@ -27,7 +27,7 @@ import org.example.back.dto.room.request.InviteChatRoomRequest;
 import org.example.back.dto.room.request.LeaveChatRoomRequest;
 import org.example.back.dto.room.response.ChatRoomResponse;
 import org.example.back.exception.member.MemberException;
-import org.example.back.repository.ChatParticipantRepository;
+import org.example.back.repository.participant.ChatParticipantRepository;
 import org.example.back.repository.room.ChatRoomQueryRepository;
 import org.example.back.repository.room.ChatRoomRepository;
 import org.example.back.repository.MemberRepository;
