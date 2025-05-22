@@ -43,8 +43,8 @@ public interface ChatMessageService {
     );
     
     // 시스템 메시지를 전송한다.
-    @Operation(summary = "시스템 메시지 전송", description = "입장/퇴장 등의 시스템 메시지를 전송한다.")
-    ChatMessage sendSystemMessage(
+    @Operation(summary = "시스템 메시지 전송 및 브로드캐스트", description = "입장/퇴장 등의 시스템 메시지를 저장하고, 채팅방의 모든 사용자에게 브로드캐스트한다.")
+    void sendSystemMessageAndBroadcast(
             @Parameter(description = "채팅방 ID") Long chatRoomId,
             @Parameter(description = "메시지 내용") String content
     );

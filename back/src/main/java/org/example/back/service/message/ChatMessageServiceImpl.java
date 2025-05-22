@@ -17,6 +17,7 @@ import org.example.back.repository.message.ChatMessageRepository;
 import org.example.back.repository.room.ChatRoomQueryRepository;
 import org.example.back.repository.room.ChatRoomRepository;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +33,7 @@ public class ChatMessageServiceImpl implements ChatMessageService {
     private final MemberRepository memberRepository;
     private final ChatParticipantRepository chatParticipantRepository;
     private final ChatMessageQueryRepository chatMessageQueryRepository;
+    private final SimpMessagingTemplate simpMessagingTemplate;
     
     @Override
     @Transactional
@@ -135,8 +137,9 @@ public class ChatMessageServiceImpl implements ChatMessageService {
     }
     
     @Override
-    public ChatMessage sendSystemMessage(Long chatRoomId, String content) {
-        log.debug("시스템 메시지 전송 요청 - roomId: {}, content: {}", chatRoomId, content);
+    @Transactional
+    public void sendSystemMessageAndBroadcast(Long chatRoomId, String content) {
+        log.debug("시스템 메시지 전송 요청 - chatRoomId: {}, content: {}", chatRoomId, content);
         
         ChatRoom room = chatRoomRepository.findById(chatRoomId)
                 .orElseThrow(() -> {
@@ -153,6 +156,8 @@ public class ChatMessageServiceImpl implements ChatMessageService {
         
         chatMessageRepository.save(message);
         
-        return message;
+        // 브로드캐스트 전송
+        ChatMessageResponse response = ChatMessageResponse.from(message);
+        simpMessagingTemplate.convertAndSend("/sub/chat/room/" + chatRoomId, response);
     }
 }
