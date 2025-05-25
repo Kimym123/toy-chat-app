@@ -1,9 +1,11 @@
 package org.example.back.service.message;
 
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.back.domain.message.ChatMessage;
+import org.example.back.domain.message.TypingStatus;
 import org.example.back.domain.room.ChatParticipant;
 import org.example.back.dto.websocket.request.ReadMessageRequest;
 import org.example.back.dto.websocket.response.ReadReceiptResponse;
@@ -26,11 +28,7 @@ public class ReadReceiptService {
     private final ChatMessageRepository chatMessageRepository;
     
     /**
-     * 메시지 읽음 처리 수행.
-     * - 메시지 유효성 확인
-     * - 채팅방 일치 여부 확인
-     * - 참여자 여부 확인
-     * - 읽음 상태 업데이트 및 읽음 알림 브로드캐스트
+     * 메시지 읽음 처리 수행. - 메시지 유효성 확인 - 채팅방 일치 여부 확인 - 참여자 여부 확인 - 읽음 상태 업데이트 및 읽음 알림 브로드캐스트
      */
     @Transactional
     public void updateLastReadMessageId(ReadMessageRequest request) {
@@ -52,7 +50,7 @@ public class ReadReceiptService {
         
         // 채팅방 참여자 여부 확인
         boolean isParticipant = chatParticipantRepository.findByChatRoomIdAndMemberId(
-                request.getChatRoomId(), request.getMemberId())
+                        request.getChatRoomId(), request.getMemberId())
                 .isPresent();
         
         if (!isParticipant) {
@@ -102,10 +100,12 @@ public class ReadReceiptService {
      * 사용자의 채팅방 내 안읽은 메시지 수를 반환.
      */
     public int getUnreadMessageCount(Long chatRoomId, Long memberId) {
-        log.debug("[ReadReceipt] 안읽은 메시지 수 조회 시작 - chatRoomId={}, memberId={}", chatRoomId, memberId);
+        log.debug("[ReadReceipt] 안읽은 메시지 수 조회 시작 - chatRoomId={}, memberId={}", chatRoomId,
+                memberId);
         
         // 사용자의 마지막 읽은 메시지 ID 조회
-        ChatParticipant participant = chatParticipantRepository.findByChatRoomIdAndMemberId(chatRoomId, memberId)
+        ChatParticipant participant = chatParticipantRepository.findByChatRoomIdAndMemberId(
+                        chatRoomId, memberId)
                 .orElseThrow(() -> {
                     log.warn("채팅방 참여자 조회 실패 - chatRoomId={}, memberId={}", chatRoomId, memberId);
                     return new IllegalArgumentException("해당 채팅방에 참여 중인 사용자가 아닙니다.");
@@ -118,8 +118,36 @@ public class ReadReceiptService {
         }
         
         // 해당 채팅방에서 더 높은 메시지 수 조회
-        int count = chatMessageRepository.countByChatRoomIdAndIdGreaterThan(chatRoomId, lastReadMessageId);
+        int count = chatMessageRepository.countByChatRoomIdAndIdGreaterThan(chatRoomId,
+                lastReadMessageId);
         log.debug("[ReadReceipt] 안읽은 메시지 수: {}", count);
         return count;
+    }
+    
+    /**
+     * 실시간 입력 상태 타이핑 브로드캐스트
+     */
+    public void broadcastTypingStatus(Long chatRoomId, Long memberId, TypingStatus status) {
+        log.debug("[TypingStatus] 브로드캐스트 시작 - chatRoomId={}, memberId={}, status={}",
+                chatRoomId, memberId, status.getValue());
+        
+        String nickname = chatParticipantRepository.findByChatRoomIdAndMemberId(
+                        chatRoomId, memberId)
+                .map(p -> p.getMember().getNickname())
+                .orElseThrow(() -> {
+                    log.warn("타이핑 상태 전송 실패 - 채팅방 참여자 없음. chatRoomId={}, memberId={}",
+                            chatRoomId, memberId);
+                    return new IllegalArgumentException("해당 채팅방에 참여 중인 사용자가 아닙니다.");
+                });
+        
+        Map<String, Object> payload = Map.of(
+                "chatRoomId", chatRoomId,
+                "memberId", memberId,
+                "nickname", nickname,
+                "status", status.getValue() // typing | stop
+        );
+        
+        final String destination = String.format("/sub/chat/room/%d/typing", chatRoomId);
+        simpMessagingTemplate.convertAndSend(destination, payload);
     }
 }

@@ -9,7 +9,9 @@ import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.back.domain.message.ChatMessage;
+import org.example.back.domain.message.TypingStatus;
 import org.example.back.dto.message.request.ChatMessageRequest;
+import org.example.back.dto.message.request.TypingStatusRequest;
 import org.example.back.dto.message.response.ChatMessageResponse;
 import org.example.back.dto.websocket.request.ReadMessageRequest;
 import org.example.back.dto.websocket.response.ReadReceiptResponse;
@@ -117,5 +119,26 @@ public class ChatStompController {
         log.debug("[UnreadCount API] 응답 수: {}", unreadCount);
         
         return unreadCount;
+    }
+    
+    @Operation(
+            summary = "실시간 타이핑 상태 전송",
+            description = "사용자의 타이핑 상태를 브로드캐스트합니다."
+    )
+    @MessageMapping("/chat/typing")
+    public void handleTyping(
+            @Parameter(description = "사용자 타이핑 요청 DTO") @Payload TypingStatusRequest request,
+            @Parameter(description = "WebSocket 세션 정보") @Header("simpSessionAttributes") Map<String, Object> attributes
+    ) {
+        Long memberId = (Long) attributes.get("memberId");
+        
+        if (memberId == null) {
+            log.warn("WebSocket 세션에 memberId 없음 - 타이핑 알림 무시됨");
+            return;
+        }
+        
+        TypingStatus status = request.getTypingStatusEnum();
+        
+        readReceiptService.broadcastTypingStatus(request.getChatRoomId(), memberId, status);
     }
 }
