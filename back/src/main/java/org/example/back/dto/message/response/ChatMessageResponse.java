@@ -35,6 +35,9 @@ public class ChatMessageResponse {
     @Schema(description = "메시지 전송자 정보")
     private SenderDto sender;
     
+    @Schema(description = "클라이언트 메시지 식별자", example = "550e8400-e29b-41d4-a716-446655440000")
+    private String clientMessageId;
+    
     @Getter
     @Builder
     @Schema(description = "메시지 전송자 DTO")
@@ -60,6 +63,7 @@ public class ChatMessageResponse {
                 .type(message.getMessageType())
                 .createdAt(message.getCreatedAt())
                 .sender(buildSenderDto(sender))
+                .clientMessageId(message.getClientMessageId())
                 .build();
     }
     

@@ -49,6 +49,9 @@ public class ChatStompController {
         Long memberId = (Long) attributes.get("memberId");
         log.debug("[Send Message] 시작 - 입력 request={}, memberId={}", request, memberId);
         
+        // 보안상 WebSocket 세션 기준으로 senderId 강제 설정
+        request.setSenderId(memberId);
+        
         // 메시지 보내기
         ChatMessage savedMessage = switch (request.getType()) {
             case TEXT -> chatMessageService.saveTextMessage(request);
@@ -63,8 +66,8 @@ public class ChatStompController {
         
         // 메시지 전송
         simpMessagingTemplate.convertAndSend("/sub/chat/room/" + request.getChatRoomId(), response);
-        log.debug("[Send Message] 저장 및 브로드캐스트 완료 - messageId={}, roomId={}",
-                response.getMessageId(), response.getChatRoomId());
+        log.debug("[Send Message] 브로드캐스트 완료 - messageId={}, roomId={}, clientMessageId={}",
+                response.getMessageId(), response.getChatRoomId(), response.getClientMessageId());
     }
     
     // 사용자의 읽음 메시지 ID를 업데이트하고, 다른 참여자에게 읽음 알림을 보냄.

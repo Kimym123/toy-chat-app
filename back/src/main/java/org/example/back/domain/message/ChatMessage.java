@@ -42,4 +42,8 @@ public class ChatMessage extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private MessageType messageType;
+    
+    // 클라이언트 측 메시지 식별자 (중복 전송 방지용)
+    @Column(name = "client_message_id", unique = true, nullable = false, length = 64)
+    private String clientMessageId;
 }

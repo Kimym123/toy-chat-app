@@ -2,6 +2,7 @@ package org.example.back.service.message;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.back.domain.member.Member;
@@ -10,10 +11,10 @@ import org.example.back.domain.message.MessageType;
 import org.example.back.domain.room.ChatRoom;
 import org.example.back.dto.message.request.ChatMessageRequest;
 import org.example.back.dto.message.response.ChatMessageResponse;
-import org.example.back.repository.participant.ChatParticipantRepository;
 import org.example.back.repository.MemberRepository;
 import org.example.back.repository.message.ChatMessageQueryRepository;
 import org.example.back.repository.message.ChatMessageRepository;
+import org.example.back.repository.participant.ChatParticipantRepository;
 import org.example.back.repository.room.ChatRoomQueryRepository;
 import org.example.back.repository.room.ChatRoomRepository;
 import org.springframework.data.domain.Pageable;
@@ -41,6 +42,19 @@ public class ChatMessageServiceImpl implements ChatMessageService {
         
         log.debug("메시지 저장 요청: {}", request);
         
+        if (request.getClientMessageId() == null || request.getClientMessageId().isBlank()) {
+            log.warn("clientMessageId 누락됨 - 메시지 무시됨");
+            throw new IllegalArgumentException("clientMessageId는 필수입니다.");
+        }
+        
+        // 중복 체크
+        Optional<ChatMessage> existing = chatMessageRepository.findByClientMessageId(request.getClientMessageId());
+        if (existing.isPresent()) {
+            log.warn("중복 메시지 요청 - clientMessageId: {}", request.getClientMessageId());
+            return existing.get();  // 중복인 경우 기존 메시지 반환
+        }
+        
+        // 채팅방 검증
         ChatRoom room = chatRoomRepository.findById(request.getChatRoomId())
                 .orElseThrow(() -> {
                     log.warn("존재하지 않는 채팅방 요청 - chatRoomId: {}", request.getChatRoomId());
@@ -52,24 +66,27 @@ public class ChatMessageServiceImpl implements ChatMessageService {
             throw new IllegalArgumentException("삭제된 채팅방입니다.");
         }
         
+        // 전송자 검증
         Member sender = memberRepository.findById(request.getSenderId())
                 .orElseThrow(() -> {
                     log.warn("존재하지 않는 사용자 요청 - senderId: {}", request.getSenderId());
                     return new IllegalArgumentException("전송자가 존재하지 않습니다.");
                 });
         
-        if (chatParticipantRepository.findByChatRoomIdAndMemberId(room.getId(), sender.getId())
-                .isEmpty()) {
-            log.warn("메시지 전송 요청자는 참여자가 아님 - senderId: {}, chatRoomId: {}", sender.getId(),
-                    room.getId());
+        if (chatParticipantRepository.findByChatRoomIdAndMemberId(
+                room.getId(), sender.getId()).isEmpty()) {
+            log.warn("메시지 전송 요청자는 참여자가 아님 - senderId: {}, chatRoomId: {}",
+                    sender.getId(), room.getId());
             throw new IllegalArgumentException("채팅방 참여자가 아닙니다.");
         }
         
+        // 메시지 생성 및 저장
         ChatMessage message = ChatMessage.builder()
                 .chatRoom(room)
                 .sender(sender)
                 .content(request.getContent())
                 .messageType(request.getType())
+                .clientMessageId(request.getClientMessageId())
                 .build();
         
         ChatMessage saved = chatMessageRepository.save(message);
