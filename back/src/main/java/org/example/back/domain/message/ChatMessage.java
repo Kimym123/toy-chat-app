@@ -46,4 +46,13 @@ public class ChatMessage extends BaseTimeEntity {
     // 클라이언트 측 메시지 식별자 (중복 전송 방지용)
     @Column(name = "client_message_id", unique = true, nullable = false, length = 64)
     private String clientMessageId;
+    
+    // 낙관적 락 버전 필드 추가 (동시 수정 충돌 대비)
+    @Version
+    private Long version;
+    
+    // 메시지 내용 수정 메서드 추가
+    public void updateContent(String newContent) {
+        this.content = newContent;
+    }
 }

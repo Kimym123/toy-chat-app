@@ -1,5 +1,6 @@
 package org.example.back.exception.global;
 
+import jakarta.persistence.OptimisticLockException;
 import org.example.back.exception.ErrorResponse;
 import org.example.back.exception.base.CustomException;
 import org.example.back.exception.base.ErrorCode;
@@ -36,5 +37,11 @@ public class GlobalExceptionHandler {
         
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponse.of(HttpStatus.BAD_REQUEST.value(), errorMessage));
+    }
+    
+    @ExceptionHandler(OptimisticLockException.class)
+    public ResponseEntity<ErrorResponse> handleOptimisticLock(OptimisticLockException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.of(HttpStatus.CONFLICT.value(), "동시 수정 충돌이 발생했습니다."));
     }
 }

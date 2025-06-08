@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import java.util.List;
 import org.example.back.domain.message.ChatMessage;
+import org.example.back.dto.message.request.ChatMessageEditRequest;
 import org.example.back.dto.message.request.ChatMessageRequest;
 import org.example.back.dto.message.response.ChatMessageResponse;
 import org.springframework.data.domain.Pageable;
@@ -48,4 +49,8 @@ public interface ChatMessageService {
             @Parameter(description = "채팅방 ID") Long chatRoomId,
             @Parameter(description = "메시지 내용") String content
     );
+    
+    // 채팅 메시지를 수정한다.
+    @Operation(summary = "채팅 메시지 수정", description = "이미 작성한 채팅 메시지를 수정한다.")
+    ChatMessageResponse editMessage(Long memberId, ChatMessageEditRequest request);
 }

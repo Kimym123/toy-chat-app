@@ -1,5 +1,6 @@
 package org.example.back.service.message;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -9,6 +10,7 @@ import org.example.back.domain.member.Member;
 import org.example.back.domain.message.ChatMessage;
 import org.example.back.domain.message.MessageType;
 import org.example.back.domain.room.ChatRoom;
+import org.example.back.dto.message.request.ChatMessageEditRequest;
 import org.example.back.dto.message.request.ChatMessageRequest;
 import org.example.back.dto.message.response.ChatMessageResponse;
 import org.example.back.repository.MemberRepository;
@@ -176,5 +178,27 @@ public class ChatMessageServiceImpl implements ChatMessageService {
         // 브로드캐스트 전송
         ChatMessageResponse response = ChatMessageResponse.from(message);
         simpMessagingTemplate.convertAndSend("/sub/chat/room/" + chatRoomId, response);
+    }
+    
+    @Override
+    @Transactional
+    public ChatMessageResponse editMessage(Long memberId, ChatMessageEditRequest request) {
+        
+        ChatMessage message = chatMessageRepository.findById(request.getMessageId())
+                .orElseThrow(() -> new IllegalArgumentException("메시지를 찾을 수 없습니다."));
+        
+        if (!message.getSender().getId().equals(memberId)) {
+            throw new SecurityException("본인의 메시지만 수정할 수 있습니다.");
+        }
+        
+        if (message.getCreatedAt().isBefore(LocalDateTime.now().minusMinutes(5))) {
+            throw new IllegalArgumentException("메시지는 5분 이내에만 수정 가능합니다");
+        }
+        
+        log.info("메시지 수정 요청 - memberId: {}, messageId: {}", memberId, message.getId());
+        
+        message.updateContent(request.getNewContent());
+        
+        return ChatMessageResponse.from(message);
     }
 }
