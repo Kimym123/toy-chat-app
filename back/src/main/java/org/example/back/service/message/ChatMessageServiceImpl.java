@@ -182,9 +182,9 @@ public class ChatMessageServiceImpl implements ChatMessageService {
     
     @Override
     @Transactional
-    public ChatMessageResponse editMessage(Long memberId, ChatMessageEditRequest request) {
+    public ChatMessageResponse editMessage(Long memberId, Long messageId, ChatMessageEditRequest request) {
         
-        ChatMessage message = chatMessageRepository.findById(request.getMessageId())
+        ChatMessage message = chatMessageRepository.findById(messageId)
                 .orElseThrow(() -> new IllegalArgumentException("메시지를 찾을 수 없습니다."));
         
         if (!message.getSender().getId().equals(memberId)) {

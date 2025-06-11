@@ -22,12 +22,13 @@ public class ChatMessageController {
     private final ChatMessageService chatMessageService;
     
     @Operation(summary = "채팅 메시지 수정", description = "본인의 메시지를 5분 이내 수정 가능")
-    @PutMapping("/edit")
+    @PutMapping("/{messageId}")
     public ResponseEntity<ChatMessageResponse> editMessage(
-            @RequestBody ChatMessageEditRequest request,
+            @Parameter(description = "수정할 메시지 ID") @PathVariable Long messageId,
+            @Valid @RequestBody ChatMessageEditRequest request,
             @AuthenticationPrincipal Long memberId
     ) {
-        ChatMessageResponse response = chatMessageService.editMessage(memberId, request);
+        ChatMessageResponse response = chatMessageService.editMessage(memberId, messageId, request);
         
         return ResponseEntity.ok(response);
     }
