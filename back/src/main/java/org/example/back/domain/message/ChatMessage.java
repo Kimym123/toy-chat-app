@@ -51,8 +51,17 @@ public class ChatMessage extends BaseTimeEntity {
     @Version
     private Long version;
     
+    // Soft Delete 추가
+    @Column(nullable = false)
+    private boolean isDeleted = false;
+    
     // 메시지 내용 수정 메서드 추가
     public void updateContent(String newContent) {
         this.content = newContent;
+    }
+    
+    // 소프트 삭제 메서드 추가
+    public void softDelete() {
+        this.isDeleted = true;
     }
 }

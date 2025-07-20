@@ -201,4 +201,18 @@ public class ChatMessageServiceImpl implements ChatMessageService {
         
         return ChatMessageResponse.from(message);
     }
+    
+    @Override
+    @Transactional
+    public void deleteMessage(Long memberId, Long messageId) {
+        ChatMessage message = chatMessageRepository.findById(messageId)
+                .orElseThrow(() ->  new IllegalArgumentException( "메시지가 존재하지 않습니다."));
+        
+        // 보낸 사람만 삭제 가능하도록 검증
+        if (message.getSender() == null || !message.getSender().getId().equals(memberId)) {
+            throw new IllegalArgumentException("본인 메시지만 삭제할 수 있습니다.");
+        }
+        
+        message.softDelete();
+    }
 }

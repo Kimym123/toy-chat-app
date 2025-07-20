@@ -1,5 +1,6 @@
 package org.example.back.repository.message;
 
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,9 @@ public class ChatMessageQueryRepository {
     public List<ChatMessage> findMessagesByChatRoomId(Long chatRoomId, Pageable pageable) {
         return queryFactory
                 .selectFrom(chatMessage)
-                .where(chatMessage.chatRoom.id.eq(chatRoomId))
+                .where(
+                        chatMessage.chatRoom.id.eq(chatRoomId).and(notDeleted())
+                )
                 .orderBy(chatMessage.createdAt.asc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -33,9 +36,17 @@ public class ChatMessageQueryRepository {
     public List<ChatMessage> findRecentMessagesByChatRoomId(Long chatRoomId, int limit) {
         return queryFactory
                 .selectFrom(chatMessage)
-                .where(chatMessage.chatRoom.id.eq(chatRoomId))
+                .where(
+                        chatMessage.chatRoom.id.eq(chatRoomId).and(notDeleted())
+                )
                 .orderBy(chatMessage.createdAt.desc())
                 .limit(limit)
                 .fetch();
+    }
+    
+    // Soft Delete 공통 필터 (isDeleted = false)
+    // 모든 메시지 조회 쿼리에 적용하여 삭제된 메시지 제외
+    private BooleanExpression notDeleted() {
+        return chatMessage.isDeleted.isFalse();
     }
 }

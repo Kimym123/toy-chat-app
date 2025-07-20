@@ -59,8 +59,9 @@ public class ChatMessageResponse {
         return ChatMessageResponse.builder()
                 .messageId(message.getId())
                 .chatRoomId(message.getChatRoom().getId())
-                .content(message.getContent())
-                .type(message.getMessageType())
+                .content(message.isDeleted() ? "삭제된 메시지입니다." : message.getContent())
+                .type(message.isDeleted() ? MessageType.SYSTEM :
+                        message.getMessageType())
                 .createdAt(message.getCreatedAt())
                 .sender(buildSenderDto(sender))
                 .clientMessageId(message.getClientMessageId())

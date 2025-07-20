@@ -53,4 +53,8 @@ public interface ChatMessageService {
     // 채팅 메시지를 수정한다.
     @Operation(summary = "채팅 메시지 수정", description = "이미 작성한 채팅 메시지를 수정한다.")
     ChatMessageResponse editMessage(Long memberId, Long messageId, ChatMessageEditRequest request);
+    
+    // 채팅 메시지를 삭제한다.
+    @Operation(summary = "채팅 메시지 삭제", description = "본인이 작성한 채팅 메시지를 소프트 삭제한다.")
+    void deleteMessage(Long memberId, Long messageId);
 }

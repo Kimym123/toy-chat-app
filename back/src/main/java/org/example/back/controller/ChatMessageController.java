@@ -1,13 +1,17 @@
 package org.example.back.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.back.dto.message.request.ChatMessageEditRequest;
 import org.example.back.dto.message.response.ChatMessageResponse;
 import org.example.back.service.message.ChatMessageService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,5 +35,16 @@ public class ChatMessageController {
         ChatMessageResponse response = chatMessageService.editMessage(memberId, messageId, request);
         
         return ResponseEntity.ok(response);
+    }
+    
+    @Operation(summary = "메시지 삭제", description = "본인의 메시지를 소프트 삭제합니다.")
+    @DeleteMapping("/{messageId}")
+    public ResponseEntity<Void> deleteMessage(
+            @Parameter(description = "삭제할 메시지 ID") @PathVariable Long messageId,
+            @AuthenticationPrincipal Long memberId
+    ) {
+        chatMessageService.deleteMessage(memberId, messageId);
+        
+        return ResponseEntity.noContent().build();
     }
 }
