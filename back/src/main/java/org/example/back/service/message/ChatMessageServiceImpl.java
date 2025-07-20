@@ -10,6 +10,8 @@ import org.example.back.domain.member.Member;
 import org.example.back.domain.message.ChatMessage;
 import org.example.back.domain.message.MessageType;
 import org.example.back.domain.room.ChatRoom;
+import org.example.back.dto.message.event.ChatMessageDeleteEvent;
+import org.example.back.dto.message.event.ChatMessageRestoreEvent;
 import org.example.back.dto.message.request.ChatMessageEditRequest;
 import org.example.back.dto.message.request.ChatMessageRequest;
 import org.example.back.dto.message.response.ChatMessageResponse;
@@ -50,7 +52,8 @@ public class ChatMessageServiceImpl implements ChatMessageService {
         }
         
         // 중복 체크
-        Optional<ChatMessage> existing = chatMessageRepository.findByClientMessageId(request.getClientMessageId());
+        Optional<ChatMessage> existing = chatMessageRepository.findByClientMessageId(
+                request.getClientMessageId());
         if (existing.isPresent()) {
             log.warn("중복 메시지 요청 - clientMessageId: {}", request.getClientMessageId());
             return existing.get();  // 중복인 경우 기존 메시지 반환
@@ -182,7 +185,8 @@ public class ChatMessageServiceImpl implements ChatMessageService {
     
     @Override
     @Transactional
-    public ChatMessageResponse editMessage(Long memberId, Long messageId, ChatMessageEditRequest request) {
+    public ChatMessageResponse editMessage(Long memberId, Long messageId,
+            ChatMessageEditRequest request) {
         
         ChatMessage message = chatMessageRepository.findById(messageId)
                 .orElseThrow(() -> new IllegalArgumentException("메시지를 찾을 수 없습니다."));
@@ -191,7 +195,8 @@ public class ChatMessageServiceImpl implements ChatMessageService {
             throw new SecurityException("본인의 메시지만 수정할 수 있습니다.");
         }
         
-        if (message.getCreatedAt().isBefore(LocalDateTime.now().minusMinutes(5))) {
+        LocalDateTime fiveMinutesAgo = LocalDateTime.now().minusMinutes(5);
+        if (message.getCreatedAt().isBefore(fiveMinutesAgo)) {
             throw new IllegalArgumentException("메시지는 5분 이내에만 수정 가능합니다");
         }
         
@@ -206,13 +211,90 @@ public class ChatMessageServiceImpl implements ChatMessageService {
     @Transactional
     public void deleteMessage(Long memberId, Long messageId) {
         ChatMessage message = chatMessageRepository.findById(messageId)
-                .orElseThrow(() ->  new IllegalArgumentException( "메시지가 존재하지 않습니다."));
+                .orElseThrow(() -> new IllegalArgumentException("메시지가 존재하지 않습니다."));
         
-        // 보낸 사람만 삭제 가능하도록 검증
-        if (message.getSender() == null || !message.getSender().getId().equals(memberId)) {
+        // 시스템 메시지 보호
+        if (message.getSender() == null) {
+            throw new IllegalArgumentException("시스템 메시지는 삭제할 수 없습니다.");
+        }
+        
+        // 본인 메시지만 삭제 가능하도록 검증
+        if (!message.getSender().getId().equals(memberId)) {
             throw new IllegalArgumentException("본인 메시지만 삭제할 수 있습니다.");
         }
         
+        // 삭제 시간 제한 검증 (5분 이내)
+        LocalDateTime fiveMinutesAgo = LocalDateTime.now().minusMinutes(5);
+        if (message.getCreatedAt().isBefore(fiveMinutesAgo)) {
+            throw new IllegalArgumentException("메시지는 5분 이내에만 삭제 가능합니다.");
+        }
+        
+        log.info("메시지 삭제 요청 - memberId: {}, messageId: {}", memberId, messageId);
+        
+        // 소프트 삭제 실행
         message.softDelete();
+        
+        // 실시간 삭제 알림 브로드캐스트
+        ChatMessageDeleteEvent deleteEvent = ChatMessageDeleteEvent.of(
+                messageId,
+                message.getChatRoom().getId(),
+                memberId,
+                message.getSender().getNickname()
+        );
+        
+        simpMessagingTemplate.convertAndSend(
+                "/sub/chat/room/" + message.getChatRoom().getId() + "/delete",
+                deleteEvent
+        );
+        
+        log.info("메시지 삭제 완료 및 실시간 알림 전송 - messageId: {}, chatRoomId: {}",
+                messageId, message.getChatRoom().getId());
+    }
+    
+    @Override
+    @Transactional
+    public void restoreMessage(Long memberId, Long messageId) {
+        ChatMessage message = chatMessageRepository.findById(messageId)
+                .orElseThrow(() -> new IllegalArgumentException("메시지가 존재하지 않습니다."));
+        
+        if (message.getSender() == null) {
+            throw new IllegalArgumentException("시스템 메시지는 복구할 수 없습니다.");
+        }
+        
+        if (!message.getSender().getId().equals(memberId)) {
+            throw new IllegalArgumentException("본인 메시지만 복구할 수 있습니다.");
+        }
+        
+        // 삭제된 메시지인지 확인
+        if (!message.isDeleted()) {
+            throw new IllegalArgumentException("삭제되지 않은 메시지입니다.");
+        }
+        
+        // 복구 시간 제한 검증 (5분 이내)
+        LocalDateTime fiveMinutesAgo = LocalDateTime.now().minusMinutes(5);
+        if (message.getCreatedAt().isBefore(fiveMinutesAgo)) {
+            throw new IllegalArgumentException("메시지는 5분 이내에만 복구 가능합니다.");
+        }
+        
+        log.info("메시지 복구 요청 - memberId: {}, messageId: {}", memberId, messageId);
+        
+        // 메시지 복구
+        message.restore();
+        
+        // 실시간 복구 알림 브로드캐스트
+        ChatMessageRestoreEvent restoreEvent = ChatMessageRestoreEvent.of(
+                messageId,
+                message.getChatRoom().getId(),
+                memberId,
+                message.getSender().getNickname()
+        );
+        
+        simpMessagingTemplate.convertAndSend(
+                "/sub/chat/room/" + message.getChatRoom().getId() + "/restore",
+                restoreEvent
+        );
+        
+        log.info("메시지 복구 완료 및 실시간 알림 전송 - messageId: {}, chatRoomId: {}",
+                messageId, message.getChatRoom().getId());
     }
 }

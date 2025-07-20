@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -46,5 +47,16 @@ public class ChatMessageController {
         chatMessageService.deleteMessage(memberId, messageId);
         
         return ResponseEntity.noContent().build();
+    }
+    
+    @Operation(summary = "메시지 삭제 취소", description = "본인이 삭제한 메시지를 5분 이내에 복구합니다.")
+    @PostMapping("/{messageId}/restore")
+    public ResponseEntity<Void> restoreMessage(
+            @Parameter(description = "복구할 메시지 ID") @PathVariable Long messageId,
+            @AuthenticationPrincipal Long memberId
+    ) {
+        chatMessageService.restoreMessage(memberId, messageId);
+        
+        return ResponseEntity.ok().build();
     }
 }

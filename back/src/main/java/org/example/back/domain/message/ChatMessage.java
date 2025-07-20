@@ -64,4 +64,9 @@ public class ChatMessage extends BaseTimeEntity {
     public void softDelete() {
         this.isDeleted = true;
     }
+    
+    // 삭제 취소 메서드 추가
+    public void restore() {
+        this.isDeleted = false;
+    }
 }

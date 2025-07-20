@@ -57,4 +57,8 @@ public interface ChatMessageService {
     // 채팅 메시지를 삭제한다.
     @Operation(summary = "채팅 메시지 삭제", description = "본인이 작성한 채팅 메시지를 소프트 삭제한다.")
     void deleteMessage(Long memberId, Long messageId);
+    
+    // 채팅 메시지 삭제를 취소한다.
+    @Operation(summary = "채팅 메시지 삭제 취소", description = "본인이 삭제한 메시지를 5분 이내에 복구한다.")
+    void restoreMessage(Long memberId, Long messageId);
 }
