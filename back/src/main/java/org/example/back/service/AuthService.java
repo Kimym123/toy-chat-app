@@ -51,8 +51,8 @@ public class AuthService {
             return new AuthException(AuthErrorCode.MEMBER_NOT_FOUND);
         });
         
-        // 새 AccessToken 생성 TODO, role 하드코딩
-        String newAccessToken = jwtTokenProvider.createAccessToken(member.getId(), "USER");
+        // 새 AccessToken 생성
+        String newAccessToken = jwtTokenProvider.createAccessToken(member.getId(), member.getRole().name());
         log.info("✅ AccessToken 재발급 성공 - memberId={}", memberId);
         
         return MemberTokenResponse.builder().accessToken(newAccessToken).refreshToken(refreshToken).build();

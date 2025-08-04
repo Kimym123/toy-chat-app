@@ -78,8 +78,7 @@ public class MemberService {
         Member member = (Member) authentication.getPrincipal();
         
         // 토큰 발급
-        // TODO 지금은 USER 하드코딩 -> 추후 리팩토링
-        String accessToken = jwtTokenProvider.createAccessToken(member.getId(), "USER");
+        String accessToken = jwtTokenProvider.createAccessToken(member.getId(), member.getRole().name());
         String refreshTokenStr = jwtTokenProvider.createRefreshToken(member.getId());
         
         // 만료 시간 계산
