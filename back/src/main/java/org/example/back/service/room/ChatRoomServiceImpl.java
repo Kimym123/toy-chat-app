@@ -143,6 +143,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     }
     
     @Override
+    @Transactional
     public void inviteMembers(Long chatRoomId, InviteChatRoomRequest request) {
         
         // 채팅방 조회
@@ -172,6 +173,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     }
     
     @Override
+    @Transactional
     public void leaveChatRoom(Long chatRoomId, LeaveChatRoomRequest request) {
         
         // 요청자가 해당 방에서 나감
@@ -193,6 +195,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     }
     
     @Override
+    @Transactional
     public void softDeleteChatRoom(Long chatRoomId, Long memberId) {
         ChatRoom chatRoom = findChatRoomById(chatRoomId);
         
