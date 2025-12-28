@@ -25,7 +25,7 @@ public class StompConnectListener {
         String memberIdStr = accessor.getFirstNativeHeader("memberId");
         String chatRoomIdStr = accessor.getFirstNativeHeader("chatRoomId");
         
-        if (memberIdStr == null && chatRoomIdStr == null) {
+        if (memberIdStr == null || chatRoomIdStr == null) {
             log.warn("입장 실패 - 필수 헤더 누락 (memberId: {}, roomId: {})", memberIdStr, chatRoomIdStr);
             return;
         }

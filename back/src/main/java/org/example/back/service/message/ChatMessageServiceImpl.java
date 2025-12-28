@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.back.domain.member.Member;
@@ -174,6 +175,7 @@ public class ChatMessageServiceImpl implements ChatMessageService {
                 .sender(null)
                 .content(content)
                 .messageType(MessageType.SYSTEM)
+                .clientMessageId("SYSTEM-" + UUID.randomUUID())
                 .build();
         
         chatMessageRepository.save(message);
