@@ -24,7 +24,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws/chat")
-                .setAllowedOrigins("*") // CORS 환경에서 도메인 제한 가능
+                .setAllowedOrigins("http://localhost:5173", "http://localhost:8080")
                 .addInterceptors(handshakeInterceptor)
                 .withSockJS();
     }
