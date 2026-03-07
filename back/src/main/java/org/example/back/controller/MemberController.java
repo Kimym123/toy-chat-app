@@ -14,6 +14,8 @@ import org.example.back.dto.auth.request.MemberRegisterRequest;
 import org.example.back.dto.member.response.MemberResponse;
 import org.example.back.service.MemberService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -53,7 +55,11 @@ public class MemberController {
             @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
     })
     public ResponseEntity<MemberResponse> getMember(
-            @Parameter(description = "조회할 회원의 ID", example = "1") @PathVariable Long id) {
+            @Parameter(description = "조회할 회원의 ID", example = "1") @PathVariable Long id,
+            @AuthenticationPrincipal Long memberId) {
+        if (!id.equals(memberId)) {
+            throw new AccessDeniedException("본인의 정보만 조회할 수 있습니다.");
+        }
         return ResponseEntity.ok(memberService.getMemberById(id));
     }
     
@@ -67,7 +73,11 @@ public class MemberController {
     })
     public ResponseEntity<String> changePassword(
             @Parameter(description = "비밀번호 변경할 회원 ID", example = "1") @PathVariable Long id,
+            @AuthenticationPrincipal Long memberId,
             @Valid @RequestBody MemberPasswordChangeRequest request) {
+        if (!id.equals(memberId)) {
+            throw new AccessDeniedException("본인의 비밀번호만 변경할 수 있습니다.");
+        }
         memberService.changePassword(id, request);
         return ResponseEntity.ok("비밀번호가 변경되었습니다.");
     }
@@ -80,7 +90,11 @@ public class MemberController {
             @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
     })
     public ResponseEntity<String> deleteMember(
-            @Parameter(description = "삭제할 회원 ID", example = "1") @PathVariable Long id) {
+            @Parameter(description = "삭제할 회원 ID", example = "1") @PathVariable Long id,
+            @AuthenticationPrincipal Long memberId) {
+        if (!id.equals(memberId)) {
+            throw new AccessDeniedException("본인의 계정만 삭제할 수 있습니다.");
+        }
         memberService.deleteMember(id);
         return ResponseEntity.ok("회원이 삭제되었습니다.");
     }
