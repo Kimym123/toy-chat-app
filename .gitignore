@@ -69,3 +69,10 @@ back/build
 
 front/package-lock.json
 front/public
+
+# Environment
+.env
+
+# ECT
+docs
+.claude
