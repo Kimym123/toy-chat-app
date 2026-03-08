@@ -35,11 +35,11 @@ public class AuthController {
     })
     @PostMapping("/token/refresh")
     public ResponseEntity<MemberTokenResponse> refreshToken(@Valid @RequestBody MemberTokenRefreshRequest request) {
-        log.info("[Token Refresh 요청] refreshToken= {}", request.getRefreshToken());
-        
+        log.info("[Token Refresh 요청] refreshToken= {}...", request.getRefreshToken().substring(0, 8));
+
         MemberTokenResponse response = authService.refreshAccessToken(request.getRefreshToken());
-        
-        log.info("[Token Refresh 완료] accessToken 발급 완료 for refreshToken= {}", request.getRefreshToken());
+
+        log.info("[Token Refresh 완료] accessToken 발급 완료 for refreshToken= {}...", request.getRefreshToken().substring(0, 8));
         
         return ResponseEntity.ok(response);
     }
@@ -51,7 +51,7 @@ public class AuthController {
     })
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@RequestBody @Valid MemberLogoutRequest request) {
-        log.info("[로그아웃 요청] RefreshToken: {}", request.getRefreshToken());
+        log.info("[로그아웃 요청] RefreshToken: {}...", request.getRefreshToken().substring(0, 8));
         authService.logout(request.getRefreshToken());
         return ResponseEntity.ok().build();
     }
