@@ -144,11 +144,15 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     
     @Override
     @Transactional
-    public void inviteMembers(Long chatRoomId, InviteChatRoomRequest request) {
-        
+    public void inviteMembers(Long chatRoomId, Long memberId, InviteChatRoomRequest request) {
+
         // 채팅방 조회
         ChatRoom chatRoom = findChatRoomById(chatRoomId);
-        
+
+        // 요청자가 채팅방 참여자인지 검증
+        chatParticipantRepository.findByChatRoomIdAndMemberId(chatRoomId, memberId)
+                .orElseThrow(() -> new IllegalArgumentException("채팅방 참여자만 초대할 수 있습니다."));
+
         if (chatRoom.getType().equals(ChatRoomType.PRIVATE)) {
             throw new IllegalArgumentException("1:1 채팅방에는 초대할 수 없습니다.");
         }

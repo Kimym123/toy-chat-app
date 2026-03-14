@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.back.dto.file.FileUploadResponse;
 import org.example.back.service.file.FileStorageService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -23,9 +24,10 @@ public class FileUploadController {
     @Operation(summary = "파일 업로드", description = "멀티파트 파일을 업로드하고 접근 가능한 URL을 반환한다.")
     public ResponseEntity<FileUploadResponse> upload(
             @Parameter(description = "업로드할 파일", required = true)
-            @RequestParam("file") MultipartFile file
+            @RequestParam("file") MultipartFile file,
+            @AuthenticationPrincipal Long memberId
     ) {
-        String savedUrl = fileStorageService.save(file);
+        String savedUrl = fileStorageService.save(file, memberId);
         return ResponseEntity.ok(new FileUploadResponse(savedUrl));
     }
 }

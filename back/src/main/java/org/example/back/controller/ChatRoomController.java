@@ -94,7 +94,7 @@ public class ChatRoomController {
             @Valid @RequestBody InviteChatRoomRequest request,
             @AuthenticationPrincipal Long memberId
     ) {
-        chatRoomService.inviteMembers(roomId, request);
+        chatRoomService.inviteMembers(roomId, memberId, request);
         
         return ResponseEntity.ok().build();
     }

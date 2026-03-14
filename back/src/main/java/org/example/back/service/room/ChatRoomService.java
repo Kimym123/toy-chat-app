@@ -32,7 +32,7 @@ public interface ChatRoomService {
     Page<ChatRoomResponse> getMyChatRooms(Long memberId, Pageable pageable);
     
     @Operation(summary = "채팅방에 멤버 초대", description = "기존 그룹 채팅방에 새로운 멤버들을 초대합니다. (PRIVATE 방 초대 불가)")
-    void inviteMembers(Long chatRoomId, InviteChatRoomRequest request);
+    void inviteMembers(Long chatRoomId, Long memberId, InviteChatRoomRequest request);
     
     @Operation(summary = "채팅방 나가기", description = "요청자가 특정 채팅방에서 나갑니다. (Soft Delete 처리)")
     void leaveChatRoom(Long chatRoomId, LeaveChatRoomRequest request);

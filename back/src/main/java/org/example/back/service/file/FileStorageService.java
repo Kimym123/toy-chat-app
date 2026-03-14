@@ -10,6 +10,7 @@ public interface FileStorageService {
     @Operation(summary = "파일 저장", description = "업로드된 파일을 저장하고 접근 가능한 파일 URL을 반환한다.")
     String save(
             @Parameter(description = "업로드할 파일", required = true)
-            MultipartFile file
+            MultipartFile file,
+            Long memberId
     );
 }

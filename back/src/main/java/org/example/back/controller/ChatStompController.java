@@ -22,6 +22,7 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
@@ -111,16 +112,16 @@ public class ChatStompController {
             summary = "채팅방 안읽은 메시지 수 조회",
             description = "해당 채팅방에서 사용자가 읽지 않은 메시지 수를 반환합니다."
     )
-    @GetMapping("/api/chat/room/{chatRoomId}/unread-count/{memberId}")
+    @GetMapping("/api/chat/room/{chatRoomId}/unread-count")
     public int getUnreadMessageCount(
             @Parameter(description = "채팅방 ID", example = "101") @PathVariable Long chatRoomId,
-            @Parameter(description = "회원 ID", example = "1") @PathVariable Long memberId
+            @AuthenticationPrincipal Long memberId
     ) {
         log.debug("[UnreadCount API] 채팅방 ID: {}, 회원 ID: {}", chatRoomId, memberId);
-        
+
         int unreadCount = readReceiptService.getUnreadMessageCount(chatRoomId, memberId);
         log.debug("[UnreadCount API] 응답 수: {}", unreadCount);
-        
+
         return unreadCount;
     }
     

@@ -578,20 +578,22 @@ public class ChatRoomServiceTest {
             InviteChatRoomRequest request = new InviteChatRoomRequest(memberIdsToInvite);
             
             when(chatRoomRepository.findById(groupRoom.getId())).thenReturn(Optional.of(groupRoom));
+            when(chatParticipantRepository.findByChatRoomIdAndMemberId(groupRoom.getId(), inviter.getId()))
+                    .thenReturn(Optional.of(ChatParticipant.create(groupRoom, inviter)));
             when(chatParticipantRepository.findByChatRoomId(groupRoom.getId())).thenReturn(
                     List.of(ChatParticipant.create(groupRoom, inviter))
             );
             when(memberRepository.findAllById(memberIdsToInvite)).thenReturn(
                     List.of(newMemberA, newMemberB));
-            
+
             // when
-            chatRoomService.inviteMembers(groupRoom.getId(), request);
-            
+            chatRoomService.inviteMembers(groupRoom.getId(), inviter.getId(), request);
+
             // then
             @SuppressWarnings("unchecked")
             ArgumentCaptor<List<ChatParticipant>> captor = ArgumentCaptor.forClass(List.class);
             verify(chatParticipantRepository).saveAll(captor.capture());
-            
+
             List<ChatParticipant> saved = captor.getValue();
             assertThat(saved).hasSize(2);
             assertThat(saved).extracting(p -> p.getMember().getId())
@@ -611,9 +613,11 @@ public class ChatRoomServiceTest {
             
             when(chatRoomRepository.findById(privateRoom.getId())).thenReturn(
                     Optional.of(privateRoom));
-            
+            when(chatParticipantRepository.findByChatRoomIdAndMemberId(privateRoom.getId(), inviter.getId()))
+                    .thenReturn(Optional.of(ChatParticipant.create(privateRoom, inviter)));
+
             // when & then
-            assertThatThrownBy(() -> chatRoomService.inviteMembers(privateRoom.getId(), request))
+            assertThatThrownBy(() -> chatRoomService.inviteMembers(privateRoom.getId(), inviter.getId(), request))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("1:1 채팅방에는 초대할 수 없습니다.");
         }
@@ -627,6 +631,8 @@ public class ChatRoomServiceTest {
             InviteChatRoomRequest request = new InviteChatRoomRequest(memberIdsToInvite);
             
             when(chatRoomRepository.findById(groupRoom.getId())).thenReturn(Optional.of(groupRoom));
+            when(chatParticipantRepository.findByChatRoomIdAndMemberId(groupRoom.getId(), inviter.getId()))
+                    .thenReturn(Optional.of(ChatParticipant.create(groupRoom, inviter)));
             when(chatParticipantRepository.findByChatRoomId(groupRoom.getId())).thenReturn(
                     List.of(ChatParticipant.create(groupRoom, inviter),
                             ChatParticipant.create(groupRoom, newMemberA) // 이미 참여
@@ -634,9 +640,9 @@ public class ChatRoomServiceTest {
             );
             when(memberRepository.findAllById(memberIdsToInvite)).thenReturn(
                     List.of(newMemberA, newMemberB));
-            
+
             // when
-            chatRoomService.inviteMembers(groupRoom.getId(), request);
+            chatRoomService.inviteMembers(groupRoom.getId(), inviter.getId(), request);
             
             // then
             @SuppressWarnings("unchecked")
@@ -659,14 +665,16 @@ public class ChatRoomServiceTest {
             InviteChatRoomRequest request = new InviteChatRoomRequest(memberIdsToInvite);
             
             when(chatRoomRepository.findById(groupRoom.getId())).thenReturn(Optional.of(groupRoom));
+            when(chatParticipantRepository.findByChatRoomIdAndMemberId(groupRoom.getId(), inviter.getId()))
+                    .thenReturn(Optional.of(ChatParticipant.create(groupRoom, inviter)));
             when(chatParticipantRepository.findByChatRoomId(groupRoom.getId())).thenReturn(
                     List.of(ChatParticipant.create(groupRoom, inviter))
             );
             when(memberRepository.findAllById(memberIdsToInvite)).thenReturn(
                     List.of(newMemberA)); // 유효한 멤버 newMemberA 만 리턴
-            
+
             // when
-            chatRoomService.inviteMembers(groupRoom.getId(), request);
+            chatRoomService.inviteMembers(groupRoom.getId(), inviter.getId(), request);
             
             // then
             @SuppressWarnings("unchecked")
@@ -690,7 +698,7 @@ public class ChatRoomServiceTest {
             when(chatRoomRepository.findById(invalidChatRoomId)).thenReturn(Optional.empty());
             
             // when & then
-            assertThatThrownBy(() -> chatRoomService.inviteMembers(invalidChatRoomId, request))
+            assertThatThrownBy(() -> chatRoomService.inviteMembers(invalidChatRoomId, inviter.getId(), request))
                     .isInstanceOf(EntityNotFoundException.class)
                     .hasMessageContaining("ChatRoom not found: " + invalidChatRoomId);
         }
@@ -704,6 +712,8 @@ public class ChatRoomServiceTest {
             InviteChatRoomRequest request = new InviteChatRoomRequest(memberIdsToInvite);
             
             when(chatRoomRepository.findById(groupRoom.getId())).thenReturn(Optional.of(groupRoom));
+            when(chatParticipantRepository.findByChatRoomIdAndMemberId(groupRoom.getId(), inviter.getId()))
+                    .thenReturn(Optional.of(ChatParticipant.create(groupRoom, inviter)));
             when(chatParticipantRepository.findByChatRoomId(groupRoom.getId())).thenReturn(
                     List.of(ChatParticipant.create(groupRoom, inviter),
                             ChatParticipant.create(groupRoom, newMemberA),
@@ -712,9 +722,9 @@ public class ChatRoomServiceTest {
             );
             when(memberRepository.findAllById(memberIdsToInvite)).thenReturn(
                     List.of(newMemberA, newMemberB));
-            
+
             // when
-            chatRoomService.inviteMembers(groupRoom.getId(), request);
+            chatRoomService.inviteMembers(groupRoom.getId(), inviter.getId(), request);
             
             // then
             verify(chatParticipantRepository, never()).saveAll(any());
