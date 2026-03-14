@@ -142,7 +142,7 @@ back/src/main/java/org/example/back/
 | Method | Endpoint | Description | 인증 |
 |--------|----------|-------------|------|
 | GET | `/api/chat/room/{chatRoomId}/read-status` | 채팅방 읽음 상태 조회 | O |
-| GET | `/api/chat/room/{chatRoomId}/unread-count/{memberId}` | 안읽은 메시지 수 | O |
+| GET | `/api/chat/room/{chatRoomId}/unread-count` | 안읽은 메시지 수 | O |
 
 ### 파일
 
@@ -285,10 +285,10 @@ docker compose up -d
 - [x] REST CORS 프론트엔드 포트 추가
 - [x] StompConnectListener 세션 기반 전환
 - [x] AuthController 로그 토큰 마스킹
-- [ ] unread-count API 인가 처리
-- [ ] inviteMembers 권한 검증
-- [ ] DB 자격증명 환경변수 분리
-- [ ] FileUploadController 인증 + 파일 검증
+- [x] unread-count API 인가 처리
+- [x] inviteMembers 권한 검증
+- [x] DB 자격증명 환경변수 분리
+- [x] FileUploadController 인증 + 파일 검증
 - [ ] RefreshToken 만료시간 검증
 - [ ] 페이지네이션 오류 수정
 - [ ] IllegalArgumentException → 도메인별 커스텀 예외 전환
