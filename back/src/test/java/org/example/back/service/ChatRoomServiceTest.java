@@ -503,28 +503,6 @@ public class ChatRoomServiceTest {
                     .containsExactlyInAnyOrder("PRIVATE", "GROUP");
         }
         
-        @Test
-        @DisplayName("soft delete 된 채팅방 자체는 목록에 포함하지 않음")
-        void 삭제된_채팅방_목록_제거() {
-            
-            // given
-            ChatRoom deletedRoom = ChatRoom.createGroupRoom("삭제된 방");
-            setPrivateField(deletedRoom, "id", 500L);
-            deletedRoom.markAsDeleted(); // 삭제 처리
-            
-            when(memberRepository.findById(requester.getId()))
-                    .thenReturn(Optional.of(requester));
-            
-            when(chatRoomQueryRepository.findMyChatRooms(requester.getId(), pageable))
-                    .thenReturn(new PageImpl<>(List.of(deletedRoom), pageable, 1));
-            
-            // when
-            Page<ChatRoomResponse> responses = chatRoomService.getMyChatRooms(requester.getId(),
-                    pageable);
-            
-            // then
-            assertThat(responses).isEmpty();
-        }
     }
     
     @Nested

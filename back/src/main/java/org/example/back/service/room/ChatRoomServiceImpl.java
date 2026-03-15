@@ -132,14 +132,13 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         // 채팅방 목록 조회 (QueryDSL)
         Page<ChatRoom> chatRooms = chatRoomQueryRepository.findMyChatRooms(member.getId(), pageable);
         
-        List<ChatRoomResponse> filtered = chatRooms.getContent().stream()
-                .filter(chatRoom -> !chatRoom.getIsDeleted())
+        List<ChatRoomResponse> responses = chatRooms.getContent().stream()
                 .map(chatRoom -> {
                     List<Long> participantIds = getParticipantIds(chatRoom);
                     return ChatRoomResponse.from(chatRoom, participantIds);
                 }).toList();
-        
-        return new PageImpl<>(filtered, pageable, filtered.size());
+
+        return new PageImpl<>(responses, pageable, chatRooms.getTotalElements());
     }
     
     @Override

@@ -290,7 +290,7 @@ docker compose up -d
 - [x] DB 자격증명 환경변수 분리
 - [x] FileUploadController 인증 + 파일 검증
 - [x] RefreshToken 만료시간 검증
-- [ ] 페이지네이션 오류 수정
+- [x] 페이지네이션 오류 수정
 - [ ] IllegalArgumentException → 도메인별 커스텀 예외 전환
 - [ ] 응답 형식/상태코드 통일
 
