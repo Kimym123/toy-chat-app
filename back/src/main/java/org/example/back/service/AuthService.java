@@ -44,7 +44,14 @@ public class AuthService {
             log.warn("저장된 RefreshToken 과 일치하지 않음 memberId= {}", memberId);
             throw new AuthException(AuthErrorCode.REFRESH_TOKEN_MISMATCH);
         }
-        
+
+        // 만료 여부 확인
+        if (savedToken.isExpired()) {
+            log.warn("만료된 RefreshToken memberId= {}", memberId);
+            refreshTokenRepository.delete(savedToken);
+            throw new AuthException(AuthErrorCode.REFRESH_TOKEN_EXPIRED);
+        }
+
         // Member 조회
         Member member = memberRepository.findById(memberId).orElseThrow(() -> {
             log.error("사용자 정보 없음 memberId= {}", memberId);

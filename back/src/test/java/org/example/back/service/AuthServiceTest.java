@@ -137,6 +137,23 @@ public class AuthServiceTest {
         }
         
         @Test
+        @DisplayName("만료된 RefreshToken -> REFRESH_TOKEN_EXPIRED 예외 및 DB 삭제")
+        void 토큰_만료() {
+            RefreshToken expiredToken = RefreshToken.builder().id(1L).member(member).token(VALID_REFRESH_TOKEN)
+                    .expiresAt(LocalDateTime.now().minusDays(1)).build();
+
+            when(jwtTokenProvider.validateToken(VALID_REFRESH_TOKEN)).thenReturn(true);
+            when(jwtTokenProvider.getMemberId(VALID_REFRESH_TOKEN)).thenReturn(MEMBER_ID);
+            when(refreshTokenRepository.findByMemberId(MEMBER_ID)).thenReturn(Optional.of(expiredToken));
+
+            AuthException exception = assertThrows(AuthException.class,
+                    () -> authService.refreshAccessToken(VALID_REFRESH_TOKEN));
+
+            assertThat(exception.getErrorCode()).isEqualTo(AuthErrorCode.REFRESH_TOKEN_EXPIRED);
+            verify(refreshTokenRepository).delete(expiredToken);
+        }
+
+        @Test
         @DisplayName("사용자 정보 없음 -> MEMBER_NOT_FOUND 예외")
         void 사용자없음() {
             when(jwtTokenProvider.validateToken(VALID_REFRESH_TOKEN)).thenReturn(true);

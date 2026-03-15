@@ -127,6 +127,21 @@ public class AuthControllerTest {
         }
         
         @Test
+        @DisplayName("만료된 RefreshToken -> 401 Unauthorized")
+        void refreshToken_만료() throws Exception {
+            // given
+            String expiredToken = "expired-refresh-token";
+            MemberTokenRefreshRequest request = new MemberTokenRefreshRequest(expiredToken);
+
+            doThrow(new AuthException(AuthErrorCode.REFRESH_TOKEN_EXPIRED)).when(authService)
+                    .refreshAccessToken(expiredToken);
+
+            // when & then
+            postJson(URL, request).andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.message").value(AuthErrorCode.REFRESH_TOKEN_EXPIRED.getMessage()));
+        }
+
+        @Test
         @DisplayName("RefreshToken 은 존재하나 사용자 없음 -> 404 Not Found")
         void refreshToken_사용자_없음() throws Exception {
             // given
