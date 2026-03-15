@@ -86,7 +86,7 @@ public class MemberRepositoryTest {
     void 비밀번호_변경_데이터_반영() {
         // when
         Member foundMember = memberRepository.findById(member.getId()).orElseThrow();
-        foundMember.setPassword("newPassword");
+        foundMember.changePassword("newPassword");
         memberRepository.flush();
         
         // then

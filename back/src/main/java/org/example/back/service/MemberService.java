@@ -120,7 +120,7 @@ public class MemberService {
             throw new MemberException(INVALID_CURRENT_PASSWORD);
         }
         
-        member.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        member.changePassword(passwordEncoder.encode(request.getNewPassword()));
         memberRepository.save(member);
     }
     

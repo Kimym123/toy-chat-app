@@ -12,7 +12,6 @@ import java.util.List;
 
 @Entity
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -54,9 +53,13 @@ public class Member extends BaseTimeEntity implements UserDetails {
         this.role = MemberRole.USER; // 기본값 설정
     }
     
+    public void changePassword(String newPassword) {
+        this.password = newPassword;
+    }
+
     /**
      * 사용자 역할 변경
-     * 
+     *
      * @param newRole 새로운 역할
      */
     public void updateRole(MemberRole newRole) {
