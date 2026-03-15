@@ -51,7 +51,7 @@ WebSocket을 통한 양방향 메시징, JWT 인증, 메시지 수정/삭제/복
 back/src/main/java/org/example/back/
 ├── config/              # Security, WebSocket, CORS, QueryDSL, OpenAPI 설정
 │   └── websocket/       # WebSocket 설정 + 핸드셰이크 인터셉터
-├── controller/          # REST API + WebSocket STOMP 컨트롤러 (7개)
+├── controller/          # REST API + WebSocket STOMP 컨트롤러 (8개)
 ├── domain/              # 엔티티
 │   ├── auth/            # RefreshToken
 │   ├── base/            # BaseTimeEntity (createdAt, updatedAt)
