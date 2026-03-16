@@ -6,4 +6,8 @@ public class AuthException extends CustomException {
     public AuthException(AuthErrorCode errorCode) {
         super(errorCode);
     }
+
+    public AuthException(AuthErrorCode errorCode, Throwable cause) {
+        super(errorCode, cause);
+    }
 }

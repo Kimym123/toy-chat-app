@@ -9,6 +9,8 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.back.config.properties.FileStorageProperties;
+import org.example.back.exception.file.FileErrorCode;
+import org.example.back.exception.file.FileException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,12 +31,12 @@ public class FileStorageServiceImpl implements FileStorageService {
         try {
             String originalName = file.getOriginalFilename();
             if (originalName == null || originalName.isBlank()) {
-                throw new IllegalArgumentException("파일명이 존재하지 않습니다.");
+                throw new FileException(FileErrorCode.FILENAME_MISSING);
             }
 
             String extension = extractExtension(originalName);
             if (!ALLOWED_EXTENSIONS.contains(extension)) {
-                throw new IllegalArgumentException("허용되지 않는 파일 확장자입니다: " + extension);
+                throw new FileException(FileErrorCode.EXTENSION_NOT_ALLOWED);
             }
             
             String fileName =
@@ -53,7 +55,7 @@ public class FileStorageServiceImpl implements FileStorageService {
             return "/files/" + fileName;
         } catch (IOException e) {
             log.error("파일 저장 중 에러 발생", e);
-            throw new RuntimeException("파일 저장 중 에러 발생");
+            throw new FileException(FileErrorCode.FILE_STORAGE_FAILED, e);
         }
     }
 

@@ -9,6 +9,10 @@ import org.example.back.domain.message.TypingStatus;
 import org.example.back.domain.room.ChatParticipant;
 import org.example.back.dto.websocket.request.ReadMessageRequest;
 import org.example.back.dto.websocket.response.ReadReceiptResponse;
+import org.example.back.exception.chatroom.ChatRoomErrorCode;
+import org.example.back.exception.chatroom.ChatRoomException;
+import org.example.back.exception.message.ChatMessageErrorCode;
+import org.example.back.exception.message.ChatMessageException;
 import org.example.back.repository.message.ChatMessageRepository;
 import org.example.back.repository.participant.ChatParticipantQueryRepository;
 import org.example.back.repository.participant.ChatParticipantRepository;
@@ -39,13 +43,13 @@ public class ReadReceiptService {
         ChatMessage message = chatMessageRepository.findById(request.getMessageId())
                 .orElseThrow(() -> {
                     log.warn("읽음 처리 실패 - 존재하지 않는 메시지 ID -MessageId: {}", request.getMessageId());
-                    return new IllegalArgumentException("존재하지 않는 메시지 ID 입니다.");
+                    return new ChatMessageException(ChatMessageErrorCode.MESSAGE_NOT_FOUND);
                 });
         
         if (!message.getChatRoom().getId().equals(request.getChatRoomId())) {
             log.warn("읽음 처리 실패 - 메시지의 채팅방 ID 불일치. 요청={}, 실제={}",
                     request.getChatRoomId(), message.getChatRoom().getId());
-            throw new IllegalArgumentException("해당 메시지가 요청한 채팅방에 속하지 않습니다.");
+            throw new ChatMessageException(ChatMessageErrorCode.MESSAGE_NOT_IN_ROOM);
         }
         
         // 채팅방 참여자 여부 확인
@@ -56,7 +60,7 @@ public class ReadReceiptService {
         if (!isParticipant) {
             log.warn("읽음 처리 실패 - 사용자가 해당 채팅방의 참여자가 아님 - chatRoomId={}, MemberId={}",
                     request.getChatRoomId(), request.getMemberId());
-            throw new IllegalArgumentException("사용자가 해당 채팅방 참여자가 아닙니다.");
+            throw new ChatRoomException(ChatRoomErrorCode.NOT_PARTICIPANT);
         }
         
         long updated = chatParticipantQueryRepository.updateLastReadMessageId(request);
@@ -108,9 +112,9 @@ public class ReadReceiptService {
                         chatRoomId, memberId)
                 .orElseThrow(() -> {
                     log.warn("채팅방 참여자 조회 실패 - chatRoomId={}, memberId={}", chatRoomId, memberId);
-                    return new IllegalArgumentException("해당 채팅방에 참여 중인 사용자가 아닙니다.");
+                    return new ChatRoomException(ChatRoomErrorCode.NOT_PARTICIPANT);
                 });
-        
+
         Long lastReadMessageId = participant.getLastReadMessageId();
         
         if (lastReadMessageId == null) {
@@ -137,9 +141,9 @@ public class ReadReceiptService {
                 .orElseThrow(() -> {
                     log.warn("타이핑 상태 전송 실패 - 채팅방 참여자 없음. chatRoomId={}, memberId={}",
                             chatRoomId, memberId);
-                    return new IllegalArgumentException("해당 채팅방에 참여 중인 사용자가 아닙니다.");
+                    return new ChatRoomException(ChatRoomErrorCode.NOT_PARTICIPANT);
                 });
-        
+
         Map<String, Object> payload = Map.of(
                 "chatRoomId", chatRoomId,
                 "memberId", memberId,

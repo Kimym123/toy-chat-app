@@ -12,7 +12,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import jakarta.persistence.EntityNotFoundException;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collections;
@@ -26,6 +25,7 @@ import org.example.back.dto.room.request.CreatePrivateChatRoomRequest;
 import org.example.back.dto.room.request.InviteChatRoomRequest;
 import org.example.back.dto.room.request.LeaveChatRoomRequest;
 import org.example.back.dto.room.response.ChatRoomResponse;
+import org.example.back.exception.chatroom.ChatRoomException;
 import org.example.back.exception.member.MemberException;
 import org.example.back.repository.participant.ChatParticipantRepository;
 import org.example.back.repository.room.ChatRoomQueryRepository;
@@ -327,8 +327,8 @@ public class ChatRoomServiceTest {
             // expect
             assertThatThrownBy(
                     () -> chatRoomService.createGroupChatRoom(requester.getId(), request))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("일부 회원 ID 가 유효하지 않습니다.");
+                    .isInstanceOf(ChatRoomException.class)
+                    .hasMessageContaining("일부 회원 ID가 유효하지 않습니다.");
         }
         
         @Test
@@ -345,8 +345,8 @@ public class ChatRoomServiceTest {
             // expect
             assertThatThrownBy(
                     () -> chatRoomService.createGroupChatRoom(requester.getId(), request))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("채팅방 이름은 비어 있을 수 없습니다");
+                    .isInstanceOf(ChatRoomException.class)
+                    .hasMessageContaining("채팅방 이름은 비어 있을 수 없습니다.");
         }
     }
     
@@ -596,7 +596,7 @@ public class ChatRoomServiceTest {
 
             // when & then
             assertThatThrownBy(() -> chatRoomService.inviteMembers(privateRoom.getId(), inviter.getId(), request))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(ChatRoomException.class)
                     .hasMessageContaining("1:1 채팅방에는 초대할 수 없습니다.");
         }
         
@@ -677,8 +677,8 @@ public class ChatRoomServiceTest {
             
             // when & then
             assertThatThrownBy(() -> chatRoomService.inviteMembers(invalidChatRoomId, inviter.getId(), request))
-                    .isInstanceOf(EntityNotFoundException.class)
-                    .hasMessageContaining("ChatRoom not found: " + invalidChatRoomId);
+                    .isInstanceOf(ChatRoomException.class)
+                    .hasMessageContaining("채팅방을 찾을 수 없습니다.");
         }
         
         @Test
@@ -850,8 +850,8 @@ public class ChatRoomServiceTest {
             
             // when & then
             assertThatThrownBy(() -> chatRoomService.leaveChatRoom(invalidRoomId, request))
-                    .isInstanceOf(EntityNotFoundException.class)
-                    .hasMessageContaining("ChatRoom not found: " + invalidRoomId);
+                    .isInstanceOf(ChatRoomException.class)
+                    .hasMessageContaining("채팅방을 찾을 수 없습니다.");
             
             verify(chatParticipantRepository).deleteByMemberIdAndChatRoomId(member.getId(),
                     invalidRoomId);
@@ -942,8 +942,8 @@ public class ChatRoomServiceTest {
             // expect
             assertThatThrownBy(() ->
                     chatRoomService.softDeleteChatRoom(invalidChatRoomId, member.getId()))
-                    .isInstanceOf(EntityNotFoundException.class)
-                    .hasMessageContaining("ChatRoom not found: " + invalidChatRoomId);
+                    .isInstanceOf(ChatRoomException.class)
+                    .hasMessageContaining("채팅방을 찾을 수 없습니다.");
             
             verify(chatRoomRepository).findById(invalidChatRoomId);
             verify(chatParticipantRepository, never()).findByChatRoomId(any());
@@ -963,8 +963,8 @@ public class ChatRoomServiceTest {
             
             assertThatThrownBy(
                     () -> chatRoomService.softDeleteChatRoom(groupRoom.getId(), member.getId()))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("해당 사용자는 채팅방의 참여자가 아닙니다");
+                    .isInstanceOf(ChatRoomException.class)
+                    .hasMessageContaining("해당 사용자는 채팅방의 참여자가 아닙니다.");
             
             verify(chatParticipantRepository).findByChatRoomId(groupRoom.getId());
         }
@@ -982,7 +982,7 @@ public class ChatRoomServiceTest {
             // then
             assertThatThrownBy(
                     () -> chatRoomService.softDeleteChatRoom(groupRoom.getId(), member.getId()))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(ChatRoomException.class)
                     .hasMessageContaining("이미 삭제된 채팅방입니다.");
             
             assertThat(groupRoom.getIsDeleted()).isTrue();

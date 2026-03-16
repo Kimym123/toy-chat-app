@@ -12,9 +12,10 @@ import org.example.back.dto.auth.request.MemberLoginRequest;
 import org.example.back.dto.auth.request.MemberPasswordChangeRequest;
 import org.example.back.dto.auth.request.MemberRegisterRequest;
 import org.example.back.dto.member.response.MemberResponse;
+import org.example.back.exception.member.MemberErrorCode;
+import org.example.back.exception.member.MemberException;
 import org.example.back.service.MemberService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -58,7 +59,7 @@ public class MemberController {
             @Parameter(description = "조회할 회원의 ID", example = "1") @PathVariable Long id,
             @AuthenticationPrincipal Long memberId) {
         if (!id.equals(memberId)) {
-            throw new AccessDeniedException("본인의 정보만 조회할 수 있습니다.");
+            throw new MemberException(MemberErrorCode.ACCESS_DENIED);
         }
         return ResponseEntity.ok(memberService.getMemberById(id));
     }
@@ -76,7 +77,7 @@ public class MemberController {
             @AuthenticationPrincipal Long memberId,
             @Valid @RequestBody MemberPasswordChangeRequest request) {
         if (!id.equals(memberId)) {
-            throw new AccessDeniedException("본인의 비밀번호만 변경할 수 있습니다.");
+            throw new MemberException(MemberErrorCode.ACCESS_DENIED);
         }
         memberService.changePassword(id, request);
         return ResponseEntity.ok("비밀번호가 변경되었습니다.");
@@ -93,7 +94,7 @@ public class MemberController {
             @Parameter(description = "삭제할 회원 ID", example = "1") @PathVariable Long id,
             @AuthenticationPrincipal Long memberId) {
         if (!id.equals(memberId)) {
-            throw new AccessDeniedException("본인의 계정만 삭제할 수 있습니다.");
+            throw new MemberException(MemberErrorCode.ACCESS_DENIED);
         }
         memberService.deleteMember(id);
         return ResponseEntity.ok("회원이 삭제되었습니다.");
