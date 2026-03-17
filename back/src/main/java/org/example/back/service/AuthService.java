@@ -1,5 +1,6 @@
 package org.example.back.service;
 
+import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.back.domain.auth.RefreshToken;
@@ -10,6 +11,7 @@ import org.example.back.exception.auth.AuthException;
 import org.example.back.repository.MemberRepository;
 import org.example.back.repository.auth.RefreshTokenRepository;
 import org.example.back.security.JwtTokenProvider;
+import org.example.back.security.TokenInfo;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -24,14 +26,15 @@ public class AuthService {
     public MemberTokenResponse refreshAccessToken(String refreshToken) {
         log.debug("[Token Refresh] 시작 - 입력 RefreshToken= {}", refreshToken);
         
-        // 토큰 유효성 검증
-        if (!jwtTokenProvider.validateToken(refreshToken)) {
+        TokenInfo tokenInfo;
+        try {
+            tokenInfo = jwtTokenProvider.parseToken(refreshToken);
+        } catch (JwtException e) {
             log.warn("유효하지 않는 RefreshToken 요청");
             throw new AuthException(AuthErrorCode.INVALID_REFRESH_TOKEN);
         }
-        
-        // 토큰에서 사용자 ID 추출
-        Long memberId = jwtTokenProvider.getMemberId(refreshToken);
+
+        Long memberId = tokenInfo.memberId();
         log.debug("[Token Refresh] 사용자 ID 추출 성공 memberId= {}", memberId);
         
         // 저장된 토큰 확인

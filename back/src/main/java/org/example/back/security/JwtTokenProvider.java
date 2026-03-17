@@ -58,21 +58,12 @@ public class JwtTokenProvider {
         
     }
     
-    public Long getMemberId(String token) {
-        return Long.valueOf(Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload().getSubject());
+    public TokenInfo parseToken(String token) {
+        var claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
+        return new TokenInfo(
+                Long.valueOf(claims.getSubject()),
+                (String) claims.get("role")
+        );
     }
-    
-    public String getRole(String token) {
-        return (String) Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload().get("role");
-    }
-    
-    public boolean validateToken(String token) {
-        try {
-            Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
-            return true;
-        } catch (Exception e) {
-            log.warn("Invalid JWT token: {}", e.getMessage());
-            return false;
-        }
-    }
+
 }

@@ -1,5 +1,6 @@
 package org.example.back.service;
 
+import io.jsonwebtoken.JwtException;
 import org.example.back.domain.auth.RefreshToken;
 import org.example.back.domain.member.Member;
 import org.example.back.dto.auth.response.MemberTokenResponse;
@@ -8,6 +9,7 @@ import org.example.back.exception.auth.AuthException;
 import org.example.back.repository.MemberRepository;
 import org.example.back.repository.auth.RefreshTokenRepository;
 import org.example.back.security.JwtTokenProvider;
+import org.example.back.security.TokenInfo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -22,8 +24,9 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+
+
 
 @ExtendWith(MockitoExtension.class)
 public class AuthServiceTest {
@@ -47,14 +50,17 @@ public class AuthServiceTest {
     
     private Member member;
     private RefreshToken refreshToken;
-    
+    private TokenInfo tokenInfo;
+
     @BeforeEach
     void 준비() {
         member = Member.builder().id(MEMBER_ID).username("testUser").password("password").nickname("testNick")
                 .email("test@google.com").phone("010-1234-5678").build();
-        
+
         refreshToken = RefreshToken.builder().id(MEMBER_ID).member(member).token(VALID_REFRESH_TOKEN)
                 .expiresAt(LocalDateTime.now().plusDays(7)).build();
+
+        tokenInfo = new TokenInfo(MEMBER_ID, "USER");
     }
     
     @Nested
@@ -65,8 +71,7 @@ public class AuthServiceTest {
         @DisplayName("정상적인 RefreshToken -> AccessToken 재발급 성공")
         void refreshAccessToken_성공() {
             // when
-            when(jwtTokenProvider.validateToken(VALID_REFRESH_TOKEN)).thenReturn(true);
-            when(jwtTokenProvider.getMemberId(VALID_REFRESH_TOKEN)).thenReturn(MEMBER_ID);
+            when(jwtTokenProvider.parseToken(VALID_REFRESH_TOKEN)).thenReturn(tokenInfo);
             when(refreshTokenRepository.findByMemberId(MEMBER_ID)).thenReturn(Optional.of(refreshToken));
             when(memberRepository.findById(MEMBER_ID)).thenReturn(Optional.of(member));
             when(jwtTokenProvider.createAccessToken(MEMBER_ID, "USER")).thenReturn("new-access-token");
@@ -99,7 +104,7 @@ public class AuthServiceTest {
         @Test
         @DisplayName("토큰 유효성 검증 실패 -> INVALID_REFRESH_TOKEN 예외")
         void 토큰_유효하지않음() {
-            when(jwtTokenProvider.validateToken(INVALID_REFRESH_TOKEN)).thenReturn(false);
+            when(jwtTokenProvider.parseToken(INVALID_REFRESH_TOKEN)).thenThrow(new JwtException("Invalid token"));
             
             AuthException exception = assertThrows(AuthException.class,
                     () -> authService.refreshAccessToken(INVALID_REFRESH_TOKEN));
@@ -110,8 +115,7 @@ public class AuthServiceTest {
         @Test
         @DisplayName("RefreshToken 저장소에 없음 -> REFRESH_TOKEN_NOT_FOUND 예외")
         void 저장된_토큰없음() {
-            when(jwtTokenProvider.validateToken(VALID_REFRESH_TOKEN)).thenReturn(true);
-            when(jwtTokenProvider.getMemberId(VALID_REFRESH_TOKEN)).thenReturn(MEMBER_ID);
+            when(jwtTokenProvider.parseToken(VALID_REFRESH_TOKEN)).thenReturn(tokenInfo);
             when(refreshTokenRepository.findByMemberId(MEMBER_ID)).thenReturn(Optional.empty());
             
             AuthException exception = assertThrows(AuthException.class,
@@ -126,8 +130,7 @@ public class AuthServiceTest {
             RefreshToken mismatchedToken = RefreshToken.builder().id(1L).member(member).token("other-token")
                     .expiresAt(LocalDateTime.now().plusDays(1)).build();
             
-            when(jwtTokenProvider.validateToken(VALID_REFRESH_TOKEN)).thenReturn(true);
-            when(jwtTokenProvider.getMemberId(VALID_REFRESH_TOKEN)).thenReturn(MEMBER_ID);
+            when(jwtTokenProvider.parseToken(VALID_REFRESH_TOKEN)).thenReturn(tokenInfo);
             when(refreshTokenRepository.findByMemberId(MEMBER_ID)).thenReturn(Optional.of(mismatchedToken));
             
             AuthException exception = assertThrows(AuthException.class,
@@ -142,8 +145,7 @@ public class AuthServiceTest {
             RefreshToken expiredToken = RefreshToken.builder().id(1L).member(member).token(VALID_REFRESH_TOKEN)
                     .expiresAt(LocalDateTime.now().minusDays(1)).build();
 
-            when(jwtTokenProvider.validateToken(VALID_REFRESH_TOKEN)).thenReturn(true);
-            when(jwtTokenProvider.getMemberId(VALID_REFRESH_TOKEN)).thenReturn(MEMBER_ID);
+            when(jwtTokenProvider.parseToken(VALID_REFRESH_TOKEN)).thenReturn(tokenInfo);
             when(refreshTokenRepository.findByMemberId(MEMBER_ID)).thenReturn(Optional.of(expiredToken));
 
             AuthException exception = assertThrows(AuthException.class,
@@ -156,8 +158,7 @@ public class AuthServiceTest {
         @Test
         @DisplayName("사용자 정보 없음 -> MEMBER_NOT_FOUND 예외")
         void 사용자없음() {
-            when(jwtTokenProvider.validateToken(VALID_REFRESH_TOKEN)).thenReturn(true);
-            when(jwtTokenProvider.getMemberId(VALID_REFRESH_TOKEN)).thenReturn(MEMBER_ID);
+            when(jwtTokenProvider.parseToken(VALID_REFRESH_TOKEN)).thenReturn(tokenInfo);
             when(refreshTokenRepository.findByMemberId(MEMBER_ID)).thenReturn(Optional.of(refreshToken));
             when(memberRepository.findById(MEMBER_ID)).thenReturn(Optional.empty());
             

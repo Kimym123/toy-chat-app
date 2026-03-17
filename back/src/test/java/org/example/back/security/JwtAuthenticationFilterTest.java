@@ -1,5 +1,6 @@
 package org.example.back.security;
 
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import org.example.back.domain.member.Member;
@@ -22,7 +23,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+
 
 @ExtendWith(MockitoExtension.class)
 public class JwtAuthenticationFilterTest {
@@ -43,7 +45,8 @@ public class JwtAuthenticationFilterTest {
     String token;
     Long memberId;
     Member member;
-    
+    TokenInfo tokenInfo;
+
     @BeforeEach
     void 준비() {
         SecurityContextHolder.clearContext();
@@ -57,6 +60,8 @@ public class JwtAuthenticationFilterTest {
         
         member = Member.builder().id(memberId).username("testUser").password("password").nickname("testNickname")
                 .email("test@example.com").phone("01012345678").build();
+
+        tokenInfo = new TokenInfo(memberId, "USER");
     }
     
     @Nested
@@ -68,9 +73,7 @@ public class JwtAuthenticationFilterTest {
         void 유효한토큰_인증성공() throws ServletException, IOException {
             // given
             request.addHeader("Authorization", "Bearer " + token);
-            when(jwtTokenProvider.validateToken(token)).thenReturn(true);
-            when(jwtTokenProvider.getMemberId(token)).thenReturn(memberId);
-            when(jwtTokenProvider.getRole(token)).thenReturn("USER");
+            when(jwtTokenProvider.parseToken(token)).thenReturn(tokenInfo);
             
             // when
             jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
@@ -87,9 +90,7 @@ public class JwtAuthenticationFilterTest {
         void 이미인증됨_중복인증안함() throws ServletException, IOException {
             // given
             request.addHeader("Authorization", "Bearer " + token);
-            when(jwtTokenProvider.validateToken(token)).thenReturn(true);
-            when(jwtTokenProvider.getMemberId(token)).thenReturn(memberId);
-            when(jwtTokenProvider.getRole(token)).thenReturn("USER");
+            when(jwtTokenProvider.parseToken(token)).thenReturn(tokenInfo);
             
             // 이미 인증된 상태 세팅
             SecurityContextHolder.getContext().setAuthentication(
@@ -127,7 +128,7 @@ public class JwtAuthenticationFilterTest {
         @DisplayName("토큰이 유효하지 않을 때 인증되지 않음")
         void 토큰무효_인증실패() throws ServletException, IOException {
             request.addHeader("Authorization", "Bearer " + token);
-            when(jwtTokenProvider.validateToken(token)).thenReturn(false);
+            when(jwtTokenProvider.parseToken(token)).thenThrow(new JwtException("Invalid token"));
             
             jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
             assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
@@ -153,7 +154,7 @@ public class JwtAuthenticationFilterTest {
         @DisplayName("JwtTokenProvider 내부 예외 발생 시 인증 안됨")
         void 내부예외발생_인증실패() throws ServletException, IOException {
             request.addHeader("Authorization", "Bearer " + token);
-            when(jwtTokenProvider.validateToken(token)).thenThrow(new RuntimeException("Test Exception"));
+            when(jwtTokenProvider.parseToken(token)).thenThrow(new RuntimeException("Test Exception"));
             
             jwtAuthenticationFilter.doFilterInternal(request,response,filterChain);
             assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();

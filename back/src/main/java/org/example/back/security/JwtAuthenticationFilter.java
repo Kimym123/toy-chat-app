@@ -1,5 +1,6 @@
 package org.example.back.security;
 
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,23 +33,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // 요청 헤더에서 JWT 토큰 추출
             String token = resolveToken(request);
             
-            // 토큰이 존재하고 유효한 경우의 분기
-            if (token != null && jwtTokenProvider.validateToken(token)) {
-                // 토큰에서 사용자 ID 와 권한 추출
-                Long memberId = jwtTokenProvider.getMemberId(token);
-                String role = jwtTokenProvider.getRole(token);
-                
-                // 이미 인증된 사용자가 아닐 경우 분기 (중복 인증 방지)
+            if (token != null) {
+                TokenInfo tokenInfo = jwtTokenProvider.parseToken(token);
+                Long memberId = tokenInfo.memberId();
+                String role = tokenInfo.role();
+
                 if (SecurityContextHolder.getContext().getAuthentication() == null) {
-                    // 인증 객체 생성 (UserDetails 없이 memberId, role 기반)
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                             memberId, null, List.of(new SimpleGrantedAuthority("ROLE_" + role)));
-                    
-                    // 현재 요청에 대한 인증 정보를 SecurityContext 에 저장
+
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     log.debug("인증 성공, memberId: {}, role: {}", memberId, role);
                 }
             }
+        } catch (JwtException error) {
+            log.warn("JWT 토큰 파싱 실패: {}", error.getMessage());
         } catch (AuthException error) {
             log.warn("JWT 인증 실패: {}", error.getErrorCode().getMessage());
         } catch (Exception error) {

@@ -1,9 +1,11 @@
 package org.example.back.config.websocket;
 
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.back.security.JwtTokenProvider;
+import org.example.back.security.TokenInfo;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
@@ -45,20 +47,17 @@ public class WebSocketHandshakeInterceptor implements HandshakeInterceptor {
         }
         
         try {
-            if (!jwtTokenProvider.validateToken(token)) {
-                log.warn("WebSocket 연결 시 토큰 유효성 검증 실패");
-                return false;
-            }
-            
-            Long memberId = jwtTokenProvider.getMemberId(token);
-            String role = jwtTokenProvider.getRole(token);
-            
+            TokenInfo tokenInfo = jwtTokenProvider.parseToken(token);
+
+            Long memberId = tokenInfo.memberId();
+            String role = tokenInfo.role();
+
             attributes.put("memberId", memberId);
             attributes.put("role", role);
-            
+
             log.debug("WebSocket 인증 완료, memberId: {}, role: {}", memberId, role);
             return true;
-        } catch (Exception e) {
+        } catch (JwtException e) {
             log.warn("WebSocket 토큰 파싱 실패: {}", e.getMessage());
             return false;
         }
