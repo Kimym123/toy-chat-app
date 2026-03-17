@@ -63,7 +63,10 @@ back/src/main/java/org/example/back/
 │   ├── base/            # CustomException, ErrorCode 인터페이스
 │   ├── auth/            # AuthException, AuthErrorCode
 │   ├── member/          # MemberException, MemberErrorCode
-│   └── global/          # GlobalExceptionHandler, GlobalErrorCode
+│   ├── chatroom/        # ChatRoomException, ChatRoomErrorCode
+│   ├── message/         # ChatMessageException, ChatMessageErrorCode
+│   ├── file/            # FileException, FileErrorCode
+│   └── global/          # GlobalExceptionHandler
 ├── listener/            # STOMP 연결/해제 이벤트 리스너
 ├── repository/          # JPA + QueryDSL 리포지토리 (8개)
 ├── security/            # JwtTokenProvider, JwtAuthenticationFilter
@@ -190,6 +193,7 @@ Client                              Server
 | `/sub/chat/room/{roomId}/typing` | 타이핑 상태 수신 |
 | `/sub/chat/room/{roomId}/delete` | 메시지 삭제 이벤트 수신 |
 | `/sub/chat/room/{roomId}/restore` | 메시지 복구 이벤트 수신 |
+| `/user/queue/errors` | STOMP 에러 응답 수신 (본인에게만 전달) |
 
 ## 설계 결정
 
@@ -240,12 +244,12 @@ cd back
 
 | 분류 | 파일 수 | 테스트 수 | 전략 |
 |------|---------|----------|------|
-| Controller | 2 | 14 | `@WebMvcTest` + 서비스 모킹 |
+| Controller | 2 | 15 | `@WebMvcTest` + 서비스 모킹 |
 | Service | 3 | 48 | `@SpringBootTest` + `@Transactional` |
 | Repository | 2 | 14 | `@DataJpaTest` |
 | Security | 1 | 8 | JWT 필터 테스트 |
 | 기타 | 1 | 1 | 애플리케이션 로드 테스트 |
-| **합계** | **9** | **85** | |
+| **합계** | **9** | **86** | |
 
 테스트 환경: H2 인메모리 (`create-drop` 모드)
 
@@ -291,7 +295,11 @@ docker compose up -d
 - [x] FileUploadController 인증 + 파일 검증
 - [x] RefreshToken 만료시간 검증
 - [x] 페이지네이션 오류 수정
-- [ ] IllegalArgumentException → 도메인별 커스텀 예외 전환
+- [x] IllegalArgumentException → 도메인별 커스텀 예외 전환
+- [x] ErrorResponse 실무 구조 개선 (code, timestamp, path 추가)
+- [x] 로그 포맷 실무화 (에러코드, HTTP method, path, 4xx/5xx 레벨 구분)
+- [x] STOMP 예외 처리 추가 (@MessageExceptionHandler + /user/queue/errors)
+- [x] 범용 예외 잔존분 커스텀 예외 전환 (AccessDeniedException, IllegalArgumentException)
 - [ ] 응답 형식/상태코드 통일
 
 ### Phase 2: Redis + Docker
@@ -319,15 +327,15 @@ docker compose up -d
 
 | 항목 | 수량 |
 |------|------|
-| Java 소스 파일 | 82개 |
+| Java 소스 파일 | 90개 |
 | 테스트 파일 | 9개 |
-| 테스트 메서드 | 85개 |
-| REST API 엔드포인트 | 17개 |
+| 테스트 메서드 | 86개 |
+| REST API 엔드포인트 | 19개 |
 | WebSocket MessageMapping | 3개 |
 | 엔티티 | 5개 |
 | Repository | 8개 |
 | Service | 10개 |
-| Controller | 7개 |
+| Controller | 8개 |
 
 ## License
 

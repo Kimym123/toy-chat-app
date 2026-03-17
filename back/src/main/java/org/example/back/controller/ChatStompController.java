@@ -13,11 +13,18 @@ import org.example.back.dto.message.request.ChatMessageRequest;
 import org.example.back.dto.message.request.TypingStatusRequest;
 import org.example.back.dto.message.response.ChatMessageResponse;
 import org.example.back.dto.websocket.request.ReadMessageRequest;
+import org.example.back.dto.websocket.response.StompErrorResponse;
+import org.example.back.exception.base.CustomException;
+import org.example.back.exception.base.ErrorCode;
+import org.example.back.exception.message.ChatMessageErrorCode;
+import org.example.back.exception.message.ChatMessageException;
 import org.example.back.service.message.ChatMessageService;
 import org.example.back.service.message.ReadReceiptService;
 import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
@@ -53,7 +60,7 @@ public class ChatStompController {
             case IMAGE, FILE -> chatMessageService.saveFileMessage(request);
             default -> {
                 log.warn("지원하지 않는 메시지 타입: {}", request.getType());
-                throw new IllegalArgumentException("지원하지 않는 타입");
+                throw new ChatMessageException(ChatMessageErrorCode.UNSUPPORTED_MESSAGE_TYPE);
             }
         };
 
@@ -79,7 +86,7 @@ public class ChatStompController {
 
         if (!Objects.equals(memberId, request.getMemberId())) {
             log.warn("읽음 알림 처리 실패 - memberId가 일치하지 않습니다.");
-            throw new IllegalArgumentException("memberId가 일치하지 않습니다.");
+            throw new ChatMessageException(ChatMessageErrorCode.MEMBER_ID_MISMATCH);
         }
 
         // 읽음 상태 업데이트 처리
@@ -105,5 +112,20 @@ public class ChatStompController {
         TypingStatus status = request.getTypingStatusEnum();
 
         readReceiptService.broadcastTypingStatus(request.getChatRoomId(), memberId, status);
+    }
+
+    @MessageExceptionHandler(CustomException.class)
+    @SendToUser("/queue/errors")
+    public StompErrorResponse handleCustomException(CustomException exception) {
+        ErrorCode errorCode = exception.getErrorCode();
+        log.warn("[STOMP][{}] {}", errorCode.name(), errorCode.getMessage());
+        return StompErrorResponse.of(errorCode.name(), errorCode.getMessage());
+    }
+
+    @MessageExceptionHandler(Exception.class)
+    @SendToUser("/queue/errors")
+    public StompErrorResponse handleException(Exception exception) {
+        log.error("[STOMP][UNHANDLED] {}", exception.getMessage(), exception);
+        return StompErrorResponse.of("INTERNAL_ERROR", "메시지 처리 중 오류가 발생했습니다.");
     }
 }
