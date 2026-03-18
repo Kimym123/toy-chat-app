@@ -13,16 +13,19 @@ import org.example.back.repository.auth.RefreshTokenRepository;
 import org.example.back.security.JwtTokenProvider;
 import org.example.back.security.TokenInfo;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class AuthService {
     
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
     private final MemberRepository memberRepository;
     
+    @Transactional
     public MemberTokenResponse refreshAccessToken(String refreshToken) {
         log.debug("[Token Refresh] 시작 - 입력 RefreshToken= {}", refreshToken);
         
@@ -68,6 +71,7 @@ public class AuthService {
         return MemberTokenResponse.builder().accessToken(newAccessToken).refreshToken(refreshToken).build();
     }
     
+    @Transactional
     public void logout(String refreshToken) {
         RefreshToken token = refreshTokenRepository.findByToken(refreshToken)
                 .orElseThrow(() -> {

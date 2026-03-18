@@ -54,7 +54,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http,
             CorsConfigurationSource corsConfigurationSource) throws Exception {
-        http.cors(cors -> cors.configurationSource(corsConfigurationSource)).authorizeHttpRequests(auth -> auth.requestMatchers("/home", "/api/members/login", "/api/members/register").permitAll()  // 인증 없이 접근 가능
+        http.cors(cors -> cors.configurationSource(corsConfigurationSource)).authorizeHttpRequests(auth -> auth.requestMatchers("/home", "/api/members/login", "/api/members/register", "/api/token/refresh", "/api/logout").permitAll()  // 인증 없이 접근 가능
                         .requestMatchers("/admin/**").hasRole("ADMIN") // ADMIN 만 접근 가능
                         .requestMatchers("/user/**").hasRole("USER") // USER 만 접근 가능
                         .anyRequest().authenticated()) // 나머지 모든 요청은 인증 필요

@@ -1,6 +1,6 @@
 package org.example.back.service;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.back.domain.auth.RefreshToken;
 import org.example.back.domain.member.Member;
@@ -26,6 +26,7 @@ import static org.example.back.exception.member.MemberErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class MemberService {
     
     private final MemberRepository memberRepository;
@@ -68,6 +69,7 @@ public class MemberService {
     }
     
     // 로그인
+    @Transactional
     public TokenResponse login(MemberLoginRequest request) {
         
         // Spring Security 의 내부 인증 로직 실행 (UserDetailsService + PasswordEncoder 사용)

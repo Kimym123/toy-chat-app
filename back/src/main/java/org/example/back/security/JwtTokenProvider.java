@@ -48,9 +48,9 @@ public class JwtTokenProvider {
     }
     
     // 내부용 토큰 생성 메서드
-    private String createToken(Long memberId, String role, long validityInMillis) {
+    private String createToken(Long memberId, String role, long validityInSeconds) {
         Instant now = Instant.now();
-        Instant expiry = now.plusMillis(validityInMillis);
+        Instant expiry = now.plusSeconds(validityInSeconds);
         
         return Jwts.builder().subject(String.valueOf(memberId)).issuedAt(Date.from(now)).expiration(Date.from(expiry))
                 .claim("role", role) // null 이면 무시됨
