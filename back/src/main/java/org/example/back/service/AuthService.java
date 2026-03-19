@@ -27,7 +27,7 @@ public class AuthService {
     
     @Transactional
     public MemberTokenResponse refreshAccessToken(String refreshToken) {
-        log.debug("[Token Refresh] 시작 - 입력 RefreshToken= {}", refreshToken);
+        log.debug("[Token Refresh] 시작 - memberId 추출 시도");
         
         TokenInfo tokenInfo;
         try {
@@ -80,6 +80,6 @@ public class AuthService {
                 });
         
         refreshTokenRepository.delete(token);
-        log.info("[로그아웃 성공] RefreshToken 삭제 완료: {}", refreshToken);
+        log.info("[로그아웃 성공] RefreshToken 삭제 완료");
     }
 }

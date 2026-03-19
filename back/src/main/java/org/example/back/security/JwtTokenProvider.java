@@ -17,19 +17,19 @@ import java.util.Date;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@Getter
 public class JwtTokenProvider {
-    
+
     @Value("${jwt.secret}")
     private String secretKey;
-    
+
     @Value("${jwt.access-token-validity}")
     private long accessTokenValidityInSeconds;
-    
+
+    @Getter
     @Value("${jwt.refresh-token-validity}")
     private long refreshTokenValidityInSeconds;
-    
-    private SecretKey key; // 정확한 구현체 타입 사용!
+
+    private SecretKey key;
     
     @PostConstruct
     public void init() {

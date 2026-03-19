@@ -25,7 +25,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
     
     private final AuthService authService;
-    
+
+    private String maskToken(String token) {
+        if (token == null || token.length() <= 8) return "***";
+        return token.substring(0, 8) + "...";
+    }
+
     @Operation(summary = "AccessToken 재발급",
             description = "저장된 RefreshToken 을 기반으로 새로운 AccessToken 을 발급. " + "RefreshToken 이 유효하지 않으면 예외 발생.")
     @ApiResponses(value = {
@@ -35,11 +40,11 @@ public class AuthController {
     })
     @PostMapping("/token/refresh")
     public ResponseEntity<MemberTokenResponse> refreshToken(@Valid @RequestBody MemberTokenRefreshRequest request) {
-        log.info("[Token Refresh 요청] refreshToken= {}...", request.getRefreshToken().substring(0, 8));
+        log.info("[Token Refresh 요청] refreshToken= {}", maskToken(request.getRefreshToken()));
 
         MemberTokenResponse response = authService.refreshAccessToken(request.getRefreshToken());
 
-        log.info("[Token Refresh 완료] accessToken 발급 완료 for refreshToken= {}...", request.getRefreshToken().substring(0, 8));
+        log.info("[Token Refresh 완료] accessToken 발급 완료 for refreshToken= {}", maskToken(request.getRefreshToken()));
         
         return ResponseEntity.ok(response);
     }
@@ -51,7 +56,7 @@ public class AuthController {
     })
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@RequestBody @Valid MemberLogoutRequest request) {
-        log.info("[로그아웃 요청] RefreshToken: {}...", request.getRefreshToken().substring(0, 8));
+        log.info("[로그아웃 요청] RefreshToken: {}", maskToken(request.getRefreshToken()));
         authService.logout(request.getRefreshToken());
         return ResponseEntity.ok().build();
     }
