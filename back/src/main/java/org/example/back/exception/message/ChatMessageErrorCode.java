@@ -21,7 +21,8 @@ public enum ChatMessageErrorCode implements ErrorCode {
     EDIT_TIME_EXPIRED(HttpStatus.BAD_REQUEST, "메시지는 5분 이내에만 수정 가능합니다."),
     DELETE_TIME_EXPIRED(HttpStatus.BAD_REQUEST, "메시지는 5분 이내에만 삭제 가능합니다."),
     RESTORE_TIME_EXPIRED(HttpStatus.BAD_REQUEST, "메시지는 5분 이내에만 복구 가능합니다."),
-    INVALID_TYPING_STATUS(HttpStatus.BAD_REQUEST, "올바르지 않은 타이핑 상태입니다.");
+    INVALID_TYPING_STATUS(HttpStatus.BAD_REQUEST, "올바르지 않은 타이핑 상태입니다."),
+    UNAUTHORIZED_ACCESS(HttpStatus.UNAUTHORIZED, "인증 정보가 없습니다. 다시 연결해주세요.");
 
     private final HttpStatus status;
     private final String message;

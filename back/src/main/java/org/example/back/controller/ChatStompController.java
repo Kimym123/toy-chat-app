@@ -49,6 +49,10 @@ public class ChatStompController {
     ) {
 
         Long memberId = (Long) attributes.get("memberId");
+        if (memberId == null) {
+            log.warn("WebSocket 세션에 memberId 없음 - 메시지 전송 거부");
+            throw new ChatMessageException(ChatMessageErrorCode.UNAUTHORIZED_ACCESS);
+        }
         log.debug("[Send Message] 시작 - 입력 request={}, memberId={}", request, memberId);
 
         // 보안상 WebSocket 세션 기준으로 senderId 강제 설정

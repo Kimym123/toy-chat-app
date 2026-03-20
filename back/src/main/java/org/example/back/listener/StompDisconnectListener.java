@@ -9,6 +9,8 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
+import java.util.Map;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -20,10 +22,15 @@ public class StompDisconnectListener {
     @EventListener
     public void handleStompDisconnect(SessionDisconnectEvent event) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
-        
-        // 입장 시 등록한 session attribute
-        Long memberId = (Long) accessor.getSessionAttributes().get("memberId");
-        Long chatRoomId = (Long) accessor.getSessionAttributes().get("chatRoomId");
+
+        Map<String, Object> sessionAttributes = accessor.getSessionAttributes();
+        if (sessionAttributes == null) {
+            log.warn("퇴장 실패 - 세션 없음");
+            return;
+        }
+
+        Long memberId = (Long) sessionAttributes.get("memberId");
+        Long chatRoomId = (Long) sessionAttributes.get("chatRoomId");
         
         if (memberId == null || chatRoomId == null) {
             log.warn("퇴장 실패 - session attribute 누락");

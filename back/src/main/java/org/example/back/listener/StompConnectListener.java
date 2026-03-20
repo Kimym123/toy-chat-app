@@ -51,6 +51,9 @@ public class StompConnectListener {
             return;
         }
 
+        // 퇴장 시 사용할 수 있도록 세션에 chatRoomId 저장
+        sessionAttributes.put("chatRoomId", chatRoomId);
+
         String nickname = memberRepository.findById(memberId)
                 .orElseThrow(() -> new MemberException(MemberErrorCode.USER_NOT_FOUND))
                 .getNickname();
