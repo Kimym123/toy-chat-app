@@ -47,6 +47,10 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     @Transactional
     public ChatRoomResponse createPrivateChatRoom(CreatePrivateChatRoomRequest request) {
 
+        if (request.getMemberId().equals(request.getTargetMemberId())) {
+            throw new ChatRoomException(SELF_CHAT_NOT_ALLOWED);
+        }
+
         Member target = findMemberById(request.getTargetMemberId());
         Member requester = findMemberById(request.getMemberId());
 
@@ -157,16 +161,25 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     @Transactional
     public void leaveChatRoom(Long chatRoomId, LeaveChatRoomRequest request) {
 
+        ChatRoom chatRoom = findChatRoomById(chatRoomId);
+
+        if (chatRoom.getIsDeleted()) {
+            throw new ChatRoomException(ALREADY_DELETED_ROOM);
+        }
+
+        boolean isParticipant = chatParticipantRepository.findByChatRoomId(chatRoomId).stream()
+                .anyMatch(cp -> cp.getMember().getId().equals(request.getMemberId()));
+
+        if (!isParticipant) {
+            throw new ChatRoomException(NOT_PARTICIPANT);
+        }
+
         chatParticipantRepository.deleteByMemberIdAndChatRoomId(request.getMemberId(), chatRoomId);
 
         List<ChatParticipant> remainingParticipants = chatParticipantRepository.findByChatRoomId(chatRoomId);
 
         if (remainingParticipants.isEmpty()) {
-            ChatRoom chatRoom = findChatRoomById(chatRoomId);
-
-            if (!chatRoom.getIsDeleted()) {
-                chatRoom.markAsDeleted();
-            }
+            chatRoom.markAsDeleted();
         }
     }
 

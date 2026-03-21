@@ -190,6 +190,10 @@ public class ChatMessageServiceImpl implements ChatMessageService {
 
         ChatMessage message = findMessageById(messageId);
 
+        if (message.isDeleted()) {
+            throw new ChatMessageException(ALREADY_DELETED_MESSAGE);
+        }
+
         if (!message.getSender().getId().equals(memberId)) {
             throw new ChatMessageException(NOT_MESSAGE_OWNER);
         }

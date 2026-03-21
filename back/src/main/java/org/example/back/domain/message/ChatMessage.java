@@ -20,7 +20,7 @@ public class ChatMessage extends BaseTimeEntity {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
     
     // 소속 채팅방
     @ManyToOne(fetch = FetchType.LAZY)
