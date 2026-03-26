@@ -70,14 +70,14 @@ public class AuthControllerTest {
         }
         
         @Test
-        @DisplayName("정상적인 로그아웃 요청 -> 200 OK")
+        @DisplayName("정상적인 로그아웃 요청 -> 204 No Content")
         void logout_성공() throws Exception {
             // given
             String token = "valid-refresh-token";
             MemberLogoutRequest request = new MemberLogoutRequest(token);
-            
+
             // when & then
-            postJson(logoutUrl, request).andExpect(status().isOk());
+            postJson(logoutUrl, request).andExpect(status().isNoContent());
         }
     }
     

@@ -26,7 +26,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
 @WebMvcTest(MemberController.class)
@@ -63,7 +64,7 @@ public class MemberControllerTest {
         when(memberService.registerMember(any())).thenReturn(response);
         
         mockMvc.perform(post("/api/members/register").contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))).andExpect(status().isOk())
+                        .content(objectMapper.writeValueAsString(request))).andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1L)).andExpect(jsonPath("$.username").value("testUser"))
                 .andExpect(jsonPath("$.nickname").value("testNickName"));
     }
@@ -104,8 +105,7 @@ public class MemberControllerTest {
         doNothing().when(memberService).changePassword(eq(1L), any());
         
         mockMvc.perform(put("/api/members/{id}/password", 1L).contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(changeRequest))).andExpect(status().isOk())
-                .andExpect(content().string("비밀번호가 변경되었습니다."));
+                        .content(objectMapper.writeValueAsString(changeRequest))).andExpect(status().isNoContent());
         
         verify(memberService, times(1)).changePassword(eq(1L), any());
     }
@@ -115,8 +115,7 @@ public class MemberControllerTest {
     void 회원삭제_성공() throws Exception {
         doNothing().when(memberService).deleteMember(1L);
         
-        mockMvc.perform(delete("/api/members/{id}", 1L)).andExpect(status().isOk())
-                .andExpect(content().string("회원이 삭제되었습니다."));
+        mockMvc.perform(delete("/api/members/{id}", 1L)).andExpect(status().isNoContent());
         
         verify(memberService, times(1)).deleteMember(1L);
     }

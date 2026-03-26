@@ -51,13 +51,13 @@ public class AuthController {
     
     @Operation(summary = "로그아웃", description = "RefreshToken 을 삭제하여 로그아웃 처리")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "로그아웃 성공"),
+            @ApiResponse(responseCode = "204", description = "로그아웃 성공"),
             @ApiResponse(responseCode = "404", description = "해당 토큰을 가진 사용자가 존재하지 않음")
     })
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@RequestBody @Valid MemberLogoutRequest request) {
         log.info("[로그아웃 요청] RefreshToken: {}", maskToken(request.getRefreshToken()));
         authService.logout(request.getRefreshToken());
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 }

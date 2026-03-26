@@ -2,6 +2,8 @@ package org.example.back.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +29,11 @@ public class ChatMessageController {
     private final ChatMessageService chatMessageService;
     
     @Operation(summary = "채팅 메시지 수정", description = "본인의 메시지를 5분 이내 수정 가능")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "수정 성공"),
+            @ApiResponse(responseCode = "400", description = "수정 시간 초과 또는 본인 메시지가 아님"),
+            @ApiResponse(responseCode = "404", description = "메시지를 찾을 수 없음")
+    })
     @PutMapping("/{messageId}")
     public ResponseEntity<ChatMessageResponse> editMessage(
             @Parameter(description = "수정할 메시지 ID") @PathVariable Long messageId,
@@ -39,6 +46,11 @@ public class ChatMessageController {
     }
     
     @Operation(summary = "메시지 삭제", description = "본인의 메시지를 소프트 삭제합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "삭제 성공"),
+            @ApiResponse(responseCode = "400", description = "삭제 시간 초과 또는 본인 메시지가 아님"),
+            @ApiResponse(responseCode = "404", description = "메시지를 찾을 수 없음")
+    })
     @DeleteMapping("/{messageId}")
     public ResponseEntity<Void> deleteMessage(
             @Parameter(description = "삭제할 메시지 ID") @PathVariable Long messageId,
@@ -50,13 +62,18 @@ public class ChatMessageController {
     }
     
     @Operation(summary = "메시지 삭제 취소", description = "본인이 삭제한 메시지를 5분 이내에 복구합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "복구 성공"),
+            @ApiResponse(responseCode = "400", description = "복구 시간 초과 또는 본인 메시지가 아님"),
+            @ApiResponse(responseCode = "404", description = "메시지를 찾을 수 없음")
+    })
     @PostMapping("/{messageId}/restore")
     public ResponseEntity<Void> restoreMessage(
             @Parameter(description = "복구할 메시지 ID") @PathVariable Long messageId,
             @AuthenticationPrincipal Long memberId
     ) {
         chatMessageService.restoreMessage(memberId, messageId);
-        
-        return ResponseEntity.ok().build();
+
+        return ResponseEntity.noContent().build();
     }
 }

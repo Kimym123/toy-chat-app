@@ -84,7 +84,7 @@ public class ChatRoomController {
     
     @Operation(summary = "채팅방에 멤버 초대", description = "그룹 채팅방에 새로운 멤버들을 초대합니다. 1:1 채팅방에는 초대할 수 없습니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "초대 성공"),
+            @ApiResponse(responseCode = "204", description = "초대 성공"),
             @ApiResponse(responseCode = "400", description = "1:1 채팅방에는 초대 불가"),
             @ApiResponse(responseCode = "404", description = "채팅방을 찾을 수 없음")
     })
@@ -96,7 +96,7 @@ public class ChatRoomController {
     ) {
         chatRoomService.inviteMembers(roomId, memberId, request);
         
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
     
     @Operation(summary = "채팅방 나가기", description = "현재 로그인한 사용자가 채팅방에서 나갑니다. 마지막 참여자가 나가면 채팅방이 삭제됩니다.")

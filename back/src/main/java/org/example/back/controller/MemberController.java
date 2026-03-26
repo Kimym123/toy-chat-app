@@ -15,6 +15,7 @@ import org.example.back.dto.member.response.MemberResponse;
 import org.example.back.exception.member.MemberErrorCode;
 import org.example.back.exception.member.MemberException;
 import org.example.back.service.MemberService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -30,12 +31,12 @@ public class MemberController {
     @PostMapping("/register")
     @Operation(summary = "회원 가입", description = "새로운 사용자를 등록합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "회원 가입 성공"),
+            @ApiResponse(responseCode = "201", description = "회원 가입 성공"),
             @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터"),
             @ApiResponse(responseCode = "409", description = "중복된 사용자 또는 닉네임"),
     })
     public ResponseEntity<MemberResponse> register(@Valid @RequestBody MemberRegisterRequest request) {
-        return ResponseEntity.ok(memberService.registerMember(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(memberService.registerMember(request));
     }
     
     @PostMapping("/login")
@@ -68,11 +69,11 @@ public class MemberController {
     @PutMapping("/{id}/password")
     @Operation(summary = "비밀번호 변경", description = "기존 비밀번호를 확인 후 새로운 비밀번호로 변경한다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "회원 정보 조회 성공"),
+            @ApiResponse(responseCode = "204", description = "비밀번호 변경 성공"),
             @ApiResponse(responseCode = "400", description = "기존 비밀번호 불일치"),
             @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
     })
-    public ResponseEntity<String> changePassword(
+    public ResponseEntity<Void> changePassword(
             @Parameter(description = "비밀번호 변경할 회원 ID", example = "1") @PathVariable Long id,
             @AuthenticationPrincipal Long memberId,
             @Valid @RequestBody MemberPasswordChangeRequest request) {
@@ -80,23 +81,23 @@ public class MemberController {
             throw new MemberException(MemberErrorCode.ACCESS_DENIED);
         }
         memberService.changePassword(id, request);
-        return ResponseEntity.ok("비밀번호가 변경되었습니다.");
+        return ResponseEntity.noContent().build();
     }
     
     // 회원 삭제
     @DeleteMapping("/{id}")
     @Operation(summary = "회원 삭제", description = "사용자를 삭제합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "회원 정보 조회 성공"),
+            @ApiResponse(responseCode = "204", description = "회원 삭제 성공"),
             @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
     })
-    public ResponseEntity<String> deleteMember(
+    public ResponseEntity<Void> deleteMember(
             @Parameter(description = "삭제할 회원 ID", example = "1") @PathVariable Long id,
             @AuthenticationPrincipal Long memberId) {
         if (!id.equals(memberId)) {
             throw new MemberException(MemberErrorCode.ACCESS_DENIED);
         }
         memberService.deleteMember(id);
-        return ResponseEntity.ok("회원이 삭제되었습니다.");
+        return ResponseEntity.noContent().build();
     }
 }
