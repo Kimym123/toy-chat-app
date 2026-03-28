@@ -5,9 +5,8 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
   jpa:
-    database-platform: org.hibernate.dialect.MySQL8Dialect
     hibernate:
-      ddl-auto: update  # 운영에서는 보통 update 또는 none 사용
+      ddl-auto: validate  # 운영 환경에서는 스키마 자동 변경 방지
     show-sql: false  # 운영에서는 보통 비활성화
     properties:
       hibernate:

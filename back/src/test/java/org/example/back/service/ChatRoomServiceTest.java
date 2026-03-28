@@ -628,7 +628,6 @@ public class ChatRoomServiceTest {
             verify(chatParticipantRepository).saveAll(captor.capture());
             
             List<ChatParticipant> saved = captor.getValue();
-            System.out.println(saved);
             assertThat(saved).hasSize(1);
             assertThat(saved.get(0).getMember().getId()).isEqualTo(newMemberB.getId());
         }
