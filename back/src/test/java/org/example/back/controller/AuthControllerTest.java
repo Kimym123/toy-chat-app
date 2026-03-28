@@ -3,7 +3,7 @@ package org.example.back.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.back.dto.auth.request.MemberLogoutRequest;
 import org.example.back.dto.auth.request.MemberTokenRefreshRequest;
-import org.example.back.dto.auth.response.MemberTokenResponse;
+import org.example.back.dto.auth.response.TokenResponse;
 import org.example.back.exception.auth.AuthErrorCode;
 import org.example.back.exception.auth.AuthException;
 import org.example.back.service.AuthService;
@@ -58,7 +58,7 @@ public class AuthControllerTest {
             String refreshToken = "valid-refresh-token";
             MemberTokenRefreshRequest request = new MemberTokenRefreshRequest(refreshToken);
             
-            MemberTokenResponse response = MemberTokenResponse.builder().accessToken("new-access-token")
+            TokenResponse response = TokenResponse.builder().accessToken("new-access-token")
                     .refreshToken(refreshToken).build();
             
             when(authService.refreshAccessToken(refreshToken)).thenReturn(response);

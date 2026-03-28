@@ -14,8 +14,7 @@ import org.example.back.domain.member.Member;
 import org.example.back.domain.message.ChatMessage;
 import org.example.back.domain.message.MessageType;
 import org.example.back.domain.room.ChatRoom;
-import org.example.back.dto.message.event.ChatMessageDeleteEvent;
-import org.example.back.dto.message.event.ChatMessageRestoreEvent;
+import org.example.back.dto.message.event.ChatMessageEvent;
 import org.example.back.dto.message.request.ChatMessageEditRequest;
 import org.example.back.dto.message.request.ChatMessageRequest;
 import org.example.back.dto.message.response.ChatMessageResponse;
@@ -232,7 +231,7 @@ public class ChatMessageServiceImpl implements ChatMessageService {
 
         message.softDelete();
 
-        ChatMessageDeleteEvent deleteEvent = ChatMessageDeleteEvent.of(
+        ChatMessageEvent deleteEvent = ChatMessageEvent.deleted(
                 messageId,
                 message.getChatRoom().getId(),
                 memberId,
@@ -274,7 +273,7 @@ public class ChatMessageServiceImpl implements ChatMessageService {
 
         message.restore();
 
-        ChatMessageRestoreEvent restoreEvent = ChatMessageRestoreEvent.of(
+        ChatMessageEvent restoreEvent = ChatMessageEvent.restored(
                 messageId,
                 message.getChatRoom().getId(),
                 memberId,

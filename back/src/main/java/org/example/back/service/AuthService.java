@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.back.domain.auth.RefreshToken;
 import org.example.back.domain.member.Member;
-import org.example.back.dto.auth.response.MemberTokenResponse;
+import org.example.back.dto.auth.response.TokenResponse;
 import org.example.back.exception.auth.AuthErrorCode;
 import org.example.back.exception.auth.AuthException;
 import org.example.back.repository.MemberRepository;
@@ -26,7 +26,7 @@ public class AuthService {
     private final MemberRepository memberRepository;
     
     @Transactional
-    public MemberTokenResponse refreshAccessToken(String refreshToken) {
+    public TokenResponse refreshAccessToken(String refreshToken) {
         log.debug("[Token Refresh] 시작 - memberId 추출 시도");
         
         TokenInfo tokenInfo;
@@ -68,7 +68,7 @@ public class AuthService {
         String newAccessToken = jwtTokenProvider.createAccessToken(member.getId(), member.getRole().name());
         log.info("✅ AccessToken 재발급 성공 - memberId={}", memberId);
         
-        return MemberTokenResponse.builder().accessToken(newAccessToken).refreshToken(refreshToken).build();
+        return TokenResponse.builder().accessToken(newAccessToken).refreshToken(refreshToken).build();
     }
     
     @Transactional

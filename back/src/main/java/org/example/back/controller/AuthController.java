@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.back.dto.auth.request.MemberLogoutRequest;
 import org.example.back.dto.auth.request.MemberTokenRefreshRequest;
-import org.example.back.dto.auth.response.MemberTokenResponse;
+import org.example.back.dto.auth.response.TokenResponse;
 import org.example.back.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -39,10 +39,10 @@ public class AuthController {
             @ApiResponse(responseCode = "404", description = "저장된 토큰 또는 사용자 정보 없음")
     })
     @PostMapping("/token/refresh")
-    public ResponseEntity<MemberTokenResponse> refreshToken(@Valid @RequestBody MemberTokenRefreshRequest request) {
+    public ResponseEntity<TokenResponse> refreshToken(@Valid @RequestBody MemberTokenRefreshRequest request) {
         log.info("[Token Refresh 요청] refreshToken= {}", maskToken(request.getRefreshToken()));
 
-        MemberTokenResponse response = authService.refreshAccessToken(request.getRefreshToken());
+        TokenResponse response = authService.refreshAccessToken(request.getRefreshToken());
 
         log.info("[Token Refresh 완료] accessToken 발급 완료 for refreshToken= {}", maskToken(request.getRefreshToken()));
         

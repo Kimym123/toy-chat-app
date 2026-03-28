@@ -3,7 +3,7 @@ package org.example.back.service;
 import io.jsonwebtoken.JwtException;
 import org.example.back.domain.auth.RefreshToken;
 import org.example.back.domain.member.Member;
-import org.example.back.dto.auth.response.MemberTokenResponse;
+import org.example.back.dto.auth.response.TokenResponse;
 import org.example.back.exception.auth.AuthErrorCode;
 import org.example.back.exception.auth.AuthException;
 import org.example.back.repository.MemberRepository;
@@ -77,7 +77,7 @@ public class AuthServiceTest {
             when(jwtTokenProvider.createAccessToken(MEMBER_ID, "USER")).thenReturn("new-access-token");
             
             // then
-            MemberTokenResponse response = authService.refreshAccessToken(VALID_REFRESH_TOKEN);
+            TokenResponse response = authService.refreshAccessToken(VALID_REFRESH_TOKEN);
             
             assertThat(response.getAccessToken()).isEqualTo("new-access-token");
             assertThat(response.getRefreshToken()).isEqualTo(VALID_REFRESH_TOKEN);
