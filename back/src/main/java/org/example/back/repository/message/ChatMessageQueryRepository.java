@@ -23,6 +23,7 @@ public class ChatMessageQueryRepository {
     public List<ChatMessage> findMessagesByChatRoomId(Long chatRoomId, Pageable pageable) {
         return queryFactory
                 .selectFrom(chatMessage)
+                .leftJoin(chatMessage.sender).fetchJoin()
                 .where(
                         chatMessage.chatRoom.id.eq(chatRoomId).and(notDeleted())
                 )
@@ -31,11 +32,12 @@ public class ChatMessageQueryRepository {
                 .limit(pageable.getPageSize())
                 .fetch();
     }
-    
+
     // 최근 메시지 N 개 조회 (최신순)
     public List<ChatMessage> findRecentMessagesByChatRoomId(Long chatRoomId, int limit) {
         return queryFactory
                 .selectFrom(chatMessage)
+                .leftJoin(chatMessage.sender).fetchJoin()
                 .where(
                         chatMessage.chatRoom.id.eq(chatRoomId).and(notDeleted())
                 )
