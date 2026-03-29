@@ -1,6 +1,7 @@
 package org.example.back.domain.message;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import lombok.*;
 import org.example.back.domain.base.BaseTimeEntity;
 import org.example.back.domain.member.Member;
@@ -54,19 +55,24 @@ public class ChatMessage extends BaseTimeEntity {
     // Soft Delete 추가
     @Column(nullable = false)
     private boolean isDeleted = false;
-    
+
+    // 삭제 시각 (복구 가능 시간 판단 기준)
+    private LocalDateTime deletedAt;
+
     // 메시지 내용 수정 메서드 추가
     public void updateContent(String newContent) {
         this.content = newContent;
     }
-    
+
     // 소프트 삭제 메서드 추가
     public void softDelete() {
         this.isDeleted = true;
+        this.deletedAt = LocalDateTime.now();
     }
-    
+
     // 삭제 취소 메서드 추가
     public void restore() {
         this.isDeleted = false;
+        this.deletedAt = null;
     }
 }

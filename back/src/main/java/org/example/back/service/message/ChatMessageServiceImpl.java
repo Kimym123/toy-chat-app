@@ -265,7 +265,7 @@ public class ChatMessageServiceImpl implements ChatMessageService {
         }
 
         LocalDateTime fiveMinutesAgo = LocalDateTime.now().minusMinutes(5);
-        if (message.getCreatedAt().isBefore(fiveMinutesAgo)) {
+        if (message.getDeletedAt().isBefore(fiveMinutesAgo)) {
             throw new ChatMessageException(RESTORE_TIME_EXPIRED);
         }
 
