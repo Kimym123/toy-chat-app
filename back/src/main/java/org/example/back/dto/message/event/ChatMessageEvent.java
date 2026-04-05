@@ -16,6 +16,7 @@ public class ChatMessageEvent {
     private Long chatRoomId;
     private Long memberId;
     private String nickname;
+    private String content;
     private LocalDateTime timestamp;
     private ChatMessageEventType eventType;
 
@@ -34,6 +35,19 @@ public class ChatMessageEvent {
     public static ChatMessageEvent deleted(Long messageId, Long chatRoomId, Long memberId,
             String nickname) {
         return of(messageId, chatRoomId, memberId, nickname, ChatMessageEventType.MESSAGE_DELETED);
+    }
+
+    public static ChatMessageEvent edited(Long messageId, Long chatRoomId, Long memberId,
+            String nickname, String content) {
+        return ChatMessageEvent.builder()
+                .messageId(messageId)
+                .chatRoomId(chatRoomId)
+                .memberId(memberId)
+                .nickname(nickname)
+                .content(content)
+                .timestamp(LocalDateTime.now())
+                .eventType(ChatMessageEventType.MESSAGE_EDITED)
+                .build();
     }
 
     public static ChatMessageEvent restored(Long messageId, Long chatRoomId, Long memberId,

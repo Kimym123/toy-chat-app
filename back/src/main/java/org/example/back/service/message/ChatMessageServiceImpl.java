@@ -212,6 +212,22 @@ public class ChatMessageServiceImpl implements ChatMessageService {
 
         message.updateContent(request.getNewContent());
 
+        ChatMessageEvent editEvent = ChatMessageEvent.edited(
+                messageId,
+                message.getChatRoom().getId(),
+                memberId,
+                message.getSender().getNickname(),
+                request.getNewContent()
+        );
+
+        simpMessagingTemplate.convertAndSend(
+                "/sub/chat/room/" + message.getChatRoom().getId() + "/edit",
+                editEvent
+        );
+
+        log.info("메시지 수정 완료 및 실시간 알림 전송 - messageId: {}, chatRoomId: {}",
+                messageId, message.getChatRoom().getId());
+
         return ChatMessageResponse.from(message);
     }
 
