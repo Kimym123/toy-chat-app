@@ -11,7 +11,9 @@ import org.example.back.dto.room.request.CreateGroupChatRoomRequest;
 import org.example.back.dto.room.request.CreatePrivateChatRoomRequest;
 import org.example.back.dto.room.request.InviteChatRoomRequest;
 import org.example.back.dto.room.request.LeaveChatRoomRequest;
+import org.example.back.dto.message.response.ChatMessageResponse;
 import org.example.back.dto.room.response.ChatRoomResponse;
+import org.example.back.service.message.ChatMessageService;
 import org.example.back.service.room.ChatRoomService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,12 +24,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Tag(name = "Chat Room API", description = "채팅방 관련 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/chat/rooms")
 public class ChatRoomController {
     
+    private final ChatMessageService chatMessageService;
     private final ChatRoomService chatRoomService;
     
     @Operation(summary = "1:1 채팅방 생성", description = "상대방과의 1:1 채팅방을 생성합니다. 이미 존재하면 기존 채팅방을 반환합니다.")
@@ -82,6 +87,23 @@ public class ChatRoomController {
         return ResponseEntity.ok(response);
     }
     
+    @Operation(summary = "채팅방 메시지 히스토리 조회", description = "채팅방의 메시지를 최신순으로 페이징 조회합니다. 참여자만 조회 가능합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
+            @ApiResponse(responseCode = "403", description = "채팅방 참여자가 아님")
+    })
+    @GetMapping("/{roomId}/messages")
+    public ResponseEntity<List<ChatMessageResponse>> getMessages(
+            @Parameter(description = "채팅방 ID") @PathVariable Long roomId,
+            @AuthenticationPrincipal Long memberId,
+            @PageableDefault(size = 50) Pageable pageable
+    ) {
+        List<ChatMessageResponse> messages = chatMessageService.getMessages(roomId, memberId, pageable);
+
+        return ResponseEntity.ok(messages);
+    }
+
     @Operation(summary = "채팅방에 멤버 초대", description = "그룹 채팅방에 새로운 멤버들을 초대합니다. 1:1 채팅방에는 초대할 수 없습니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "초대 성공"),

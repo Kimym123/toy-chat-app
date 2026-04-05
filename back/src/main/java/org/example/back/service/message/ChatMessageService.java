@@ -33,6 +33,7 @@ public interface ChatMessageService {
     @Operation(summary = "채팅 메시지 목록 조회", description = "특정 채팅방의 메시지들을 페이지 단위로 조회한다.")
     List<ChatMessageResponse> getMessages(
             @Parameter(description = "채팅방 ID") Long chatRoomId,
+            @Parameter(description = "요청자 ID") Long memberId,
             @Parameter(description = "페이징 정보") Pageable pageable
     );
     

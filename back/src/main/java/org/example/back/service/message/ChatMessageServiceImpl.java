@@ -131,8 +131,14 @@ public class ChatMessageServiceImpl implements ChatMessageService {
     }
 
     @Override
-    public List<ChatMessageResponse> getMessages(Long chatRoomId, Pageable pageable) {
-        log.debug("메시지 리스트 조회 요청 - roomId: {}, page: {}", chatRoomId, pageable.getPageNumber());
+    public List<ChatMessageResponse> getMessages(Long chatRoomId, Long memberId, Pageable pageable) {
+        log.debug("메시지 리스트 조회 요청 - roomId: {}, memberId: {}, page: {}", chatRoomId, memberId, pageable.getPageNumber());
+
+        if (chatParticipantRepository.findByChatRoomIdAndMemberId(chatRoomId, memberId).isEmpty()) {
+            log.warn("메시지 조회 실패 - 채팅방 참여자가 아님 - chatRoomId: {}, memberId: {}", chatRoomId, memberId);
+            throw new ChatRoomException(NOT_PARTICIPANT);
+        }
+
         List<ChatMessage> messages = chatMessageQueryRepository.findMessagesByChatRoomId(chatRoomId, pageable);
 
         List<ChatMessageResponse> responseList = new ArrayList<>();

@@ -27,7 +27,7 @@ public class ChatMessageQueryRepository {
                 .where(
                         chatMessage.chatRoom.id.eq(chatRoomId).and(notDeleted())
                 )
-                .orderBy(chatMessage.createdAt.asc())
+                .orderBy(chatMessage.createdAt.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
