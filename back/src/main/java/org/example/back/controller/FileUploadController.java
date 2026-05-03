@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
+import org.example.back.domain.file.UploadedFile;
 import org.example.back.dto.file.FileUploadResponse;
 import org.example.back.service.file.FileStorageService;
 import org.springframework.http.HttpStatus;
@@ -20,11 +21,11 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 @RequestMapping("/api/files")
 public class FileUploadController {
-    
+
     private final FileStorageService fileStorageService;
-    
+
     @PostMapping("/upload")
-    @Operation(summary = "파일 업로드", description = "멀티파트 파일을 업로드하고 접근 가능한 URL을 반환한다.")
+    @Operation(summary = "파일 업로드", description = "멀티파트 파일을 업로드하고 fileId 와 다운로드 URL 을 반환한다.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "업로드 성공"),
             @ApiResponse(responseCode = "400", description = "잘못된 파일"),
@@ -35,7 +36,7 @@ public class FileUploadController {
             @RequestParam("file") MultipartFile file,
             @AuthenticationPrincipal Long memberId
     ) {
-        String savedUrl = fileStorageService.save(file, memberId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new FileUploadResponse(savedUrl));
+        UploadedFile saved = fileStorageService.save(file, memberId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(FileUploadResponse.from(saved));
     }
 }
