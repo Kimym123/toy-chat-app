@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import lombok.*;
 import org.example.back.domain.base.BaseTimeEntity;
+import org.example.back.domain.file.UploadedFile;
 import org.example.back.domain.member.Member;
 import org.example.back.domain.room.ChatRoom;
 
@@ -44,6 +45,11 @@ public class ChatMessage extends BaseTimeEntity {
     @Column(nullable = false)
     private MessageType messageType;
     
+    // 첨부 파일 (FILE / IMAGE 타입에서만 사용. TEXT / SYSTEM 은 null)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "file_id")
+    private UploadedFile file;
+
     // 클라이언트 측 메시지 식별자 (중복 전송 방지용)
     @Column(name = "client_message_id", unique = true, nullable = false, length = 64)
     private String clientMessageId;

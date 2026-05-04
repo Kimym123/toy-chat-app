@@ -10,21 +10,16 @@ import org.example.back.dto.message.response.ChatMessageResponse;
 import org.springframework.data.domain.Pageable;
 
 public interface ChatMessageService {
-    
-    // 채팅 메시지를 저장한다.
-    @Operation(summary = "채팅 메시지 저장", description = "채탕방 ID, 전송자 ID, 내용 등을 받아 메시지를 저장한다.")
-    ChatMessage saveMessage(
-            @Parameter(description = "메시지 저장 요청 DTO") ChatMessageRequest request
-    );
-    
-    // saveMessage 재활용하여 텍스트 메시지를 저장한다.
+
+    // 텍스트 메시지를 저장한다.
     @Operation(summary = "텍스트 메시지 저장", description = "TEXT 메시지를 저장한다.")
     ChatMessage saveTextMessage(
             @Parameter(description = "메시지 요청 DTO") ChatMessageRequest request
     );
-    
-    // saveMessage 재활용하여 파일, 이미지 메시지를 저장한다.
-    @Operation(summary = "파일/이미지 메시지 저장", description = "FILE, IMAGE 메시지를 저장한다.")
+
+    // 파일/이미지 메시지를 저장한다.
+    @Operation(summary = "파일/이미지 메시지 저장",
+            description = "FILE, IMAGE 메시지를 저장한다. fileId 로 UploadedFile 을 조회하여 첨부하고, 업로더 본인만 첨부 가능.")
     ChatMessage saveFileMessage(
             @Parameter(description = "메시지 요청 DTO") ChatMessageRequest request
     );

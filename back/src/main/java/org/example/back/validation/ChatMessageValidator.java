@@ -36,8 +36,8 @@ public class ChatMessageValidator implements ConstraintValidator<ValidChatMessag
     }
     
     private boolean validateFileMessage(ChatMessageRequest request, ConstraintValidatorContext context) {
-        if (request.getFileUrl() == null || request.getFileUrl().isBlank()) {
-            addViolation(context, "파일/이미지 메시지에는 파일 URL이 필수입니다.");
+        if (request.getFileId() == null) {
+            addViolation(context, "파일/이미지 메시지에는 fileId 가 필수입니다.");
             return false;
         }
         return true;

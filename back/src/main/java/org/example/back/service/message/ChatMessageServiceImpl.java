@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.back.domain.file.UploadedFile;
 import org.example.back.domain.member.Member;
 import org.example.back.domain.message.ChatMessage;
 import org.example.back.domain.message.MessageType;
@@ -23,6 +24,7 @@ import org.example.back.exception.member.MemberErrorCode;
 import org.example.back.exception.member.MemberException;
 import org.example.back.exception.message.ChatMessageException;
 import org.example.back.repository.MemberRepository;
+import org.example.back.repository.file.UploadedFileRepository;
 import org.example.back.repository.message.ChatMessageQueryRepository;
 import org.example.back.repository.message.ChatMessageRepository;
 import org.example.back.repository.participant.ChatParticipantRepository;
@@ -45,12 +47,51 @@ public class ChatMessageServiceImpl implements ChatMessageService {
     private final MemberRepository memberRepository;
     private final ChatParticipantRepository chatParticipantRepository;
     private final ChatMessageQueryRepository chatMessageQueryRepository;
+    private final UploadedFileRepository uploadedFileRepository;
     private final SimpMessagingTemplate simpMessagingTemplate;
 
     @Override
     @Transactional
-    public ChatMessage saveMessage(ChatMessageRequest request) {
+    public ChatMessage saveTextMessage(ChatMessageRequest request) {
+        log.debug("텍스트 메시지 저장 요청: {}", request);
 
+        if (request.getContent() == null || request.getContent().isBlank()) {
+            log.warn("TEXT 메시지 내용이 비어 있음");
+            throw new ChatMessageException(CONTENT_REQUIRED);
+        }
+
+        return doSaveMessage(request, null);
+    }
+
+    @Override
+    @Transactional
+    public ChatMessage saveFileMessage(ChatMessageRequest request) {
+        log.debug("파일 메시지 저장 요청: {}", request);
+
+        if (request.getFileId() == null) {
+            log.warn("fileId 누락 - FILE/IMAGE 메시지");
+            throw new ChatMessageException(FILE_ID_REQUIRED);
+        }
+
+        UploadedFile file = uploadedFileRepository.findById(request.getFileId())
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 첨부 파일 - fileId: {}", request.getFileId());
+                    return new ChatMessageException(ATTACHED_FILE_NOT_FOUND);
+                });
+
+        if (!file.getUploader().getId().equals(request.getSenderId())) {
+            log.warn("파일 소유자 불일치 - fileId: {}, uploader: {}, sender: {}",
+                    file.getId(), file.getUploader().getId(), request.getSenderId());
+            throw new ChatMessageException(NOT_ATTACHED_FILE_OWNER);
+        }
+
+        // content 에 원본 파일명 저장 (UI 표시용. 실제 다운로드 URL 은 file.id 로 별도 구성)
+        request.setContent(file.getOriginalName());
+
+        return doSaveMessage(request, file);
+    }
+
+    private ChatMessage doSaveMessage(ChatMessageRequest request, UploadedFile file) {
         log.debug("메시지 저장 요청: {}", request);
 
         if (request.getClientMessageId() == null || request.getClientMessageId().isBlank()) {
@@ -95,39 +136,13 @@ public class ChatMessageServiceImpl implements ChatMessageService {
                 .content(request.getContent())
                 .messageType(request.getType())
                 .clientMessageId(request.getClientMessageId())
+                .file(file)
                 .build();
 
         ChatMessage saved = chatMessageRepository.save(message);
-        log.info("메시지 저장 완료 - id: {}, roomId: {}", saved.getId(), saved.getChatRoom().getId());
+        log.info("메시지 저장 완료 - id: {}, roomId: {}, fileId: {}",
+                saved.getId(), saved.getChatRoom().getId(), file != null ? file.getId() : null);
         return saved;
-    }
-
-    @Override
-    @Transactional
-    public ChatMessage saveTextMessage(ChatMessageRequest request) {
-        log.debug("텍스트 메시지 저장 요청: {}", request);
-
-        if (request.getContent() == null || request.getContent().isBlank()) {
-            log.warn("TEXT 메시지 내용이 비어 있음");
-            throw new ChatMessageException(CONTENT_REQUIRED);
-        }
-
-        return saveMessage(request);
-    }
-
-    @Override
-    @Transactional
-    public ChatMessage saveFileMessage(ChatMessageRequest request) {
-        log.debug("파일 메시지 저장 요청: {}", request);
-
-        if (request.getFileUrl() == null || request.getFileUrl().isBlank()) {
-            log.warn("fileUrl 누락 - FILE/IMAGE 메시지");
-            throw new ChatMessageException(FILE_URL_REQUIRED);
-        }
-
-        request.setContent(request.getFileUrl());
-
-        return saveMessage(request);
     }
 
     @Override

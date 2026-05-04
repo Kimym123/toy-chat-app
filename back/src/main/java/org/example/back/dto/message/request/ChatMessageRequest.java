@@ -33,8 +33,8 @@ public class ChatMessageRequest {
     @NotNull(message = "메시지 타입은 필수입니다.")
     private MessageType type;
     
-    @Schema(description = "파일 URL (파일/이미지 메시지일 경우 사용)", example = "http://localhost:8080/files/abc123.jpg")
-    private String fileUrl;
+    @Schema(description = "첨부 파일 ID (파일/이미지 메시지일 경우 필수, 업로드 API 응답의 fileId)", example = "42")
+    private Long fileId;
     
     @Schema(description = "클라이언트 메시지 식별자 (중복 전송 방지용)", example = "550e8400-e29b-41d4-a716-446655440000")
     @NotBlank(message = "클라이언트 메시지 식별자는 필수입니다.")

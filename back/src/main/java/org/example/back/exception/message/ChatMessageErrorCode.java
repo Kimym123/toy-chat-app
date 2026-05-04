@@ -10,7 +10,7 @@ public enum ChatMessageErrorCode implements ErrorCode {
     MESSAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "메시지를 찾을 수 없습니다."),
     CLIENT_MESSAGE_ID_REQUIRED(HttpStatus.BAD_REQUEST, "clientMessageId는 필수입니다."),
     CONTENT_REQUIRED(HttpStatus.BAD_REQUEST, "텍스트 메시지에는 content가 필요합니다."),
-    FILE_URL_REQUIRED(HttpStatus.BAD_REQUEST, "파일 메시지에는 fileUrl이 필요합니다."),
+    FILE_ID_REQUIRED(HttpStatus.BAD_REQUEST, "파일 메시지에는 fileId 가 필요합니다."),
     UNSUPPORTED_MESSAGE_TYPE(HttpStatus.BAD_REQUEST, "지원하지 않는 메시지 타입입니다."),
     NOT_DELETED_MESSAGE(HttpStatus.BAD_REQUEST, "삭제되지 않은 메시지입니다."),
     MESSAGE_NOT_IN_ROOM(HttpStatus.BAD_REQUEST, "해당 메시지가 요청한 채팅방에 속하지 않습니다."),
@@ -23,7 +23,9 @@ public enum ChatMessageErrorCode implements ErrorCode {
     RESTORE_TIME_EXPIRED(HttpStatus.BAD_REQUEST, "메시지는 5분 이내에만 복구 가능합니다."),
     ALREADY_DELETED_MESSAGE(HttpStatus.BAD_REQUEST, "이미 삭제된 메시지입니다."),
     INVALID_TYPING_STATUS(HttpStatus.BAD_REQUEST, "올바르지 않은 타이핑 상태입니다."),
-    UNAUTHORIZED_ACCESS(HttpStatus.UNAUTHORIZED, "인증 정보가 없습니다. 다시 연결해주세요.");
+    UNAUTHORIZED_ACCESS(HttpStatus.UNAUTHORIZED, "인증 정보가 없습니다. 다시 연결해주세요."),
+    ATTACHED_FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "첨부 파일을 찾을 수 없습니다."),
+    NOT_ATTACHED_FILE_OWNER(HttpStatus.FORBIDDEN, "본인이 업로드한 파일만 첨부할 수 있습니다.");
 
     private final HttpStatus status;
     private final String message;
