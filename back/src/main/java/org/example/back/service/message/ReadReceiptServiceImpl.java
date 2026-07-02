@@ -11,6 +11,7 @@ import org.example.back.exception.chatroom.ChatRoomErrorCode;
 import org.example.back.exception.chatroom.ChatRoomException;
 import org.example.back.exception.message.ChatMessageErrorCode;
 import org.example.back.exception.message.ChatMessageException;
+import org.example.back.repository.message.ChatMessageQueryRepository;
 import org.example.back.repository.message.ChatMessageRepository;
 import org.example.back.repository.participant.ChatParticipantQueryRepository;
 import org.example.back.repository.participant.ChatParticipantRepository;
@@ -31,6 +32,7 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final ChatParticipantRepository chatParticipantRepository;
     private final ChatMessageRepository chatMessageRepository;
+    private final ChatMessageQueryRepository chatMessageQueryRepository;
     
     @Override
     @Transactional
@@ -122,7 +124,7 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
             lastReadMessageId = 0L;
         }
         
-        int count = chatMessageRepository.countByChatRoomIdAndIdGreaterThan(chatRoomId,
+        int count = chatMessageQueryRepository.countUnreadByChatRoomId(chatRoomId,
                 lastReadMessageId);
         log.debug("[ReadReceipt] 안읽은 메시지 수: {}", count);
         return count;

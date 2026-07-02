@@ -8,9 +8,6 @@ import org.springframework.data.repository.query.Param;
 
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
 
-    // 안 읽은 메시지 수 계산
-    int countByChatRoomIdAndIdGreaterThan(Long chatRoomId, Long messageId);
-
     // clientMessageId 중복 여부 확인용
     boolean existsByClientMessageId(String clientMessageId);
 

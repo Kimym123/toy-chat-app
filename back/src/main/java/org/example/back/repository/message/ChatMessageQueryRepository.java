@@ -46,6 +46,20 @@ public class ChatMessageQueryRepository {
                 .fetch();
     }
     
+    // 안 읽은 메시지 수 조회 (소프트 삭제 메시지 제외)
+    public int countUnreadByChatRoomId(Long chatRoomId, Long lastReadMessageId) {
+        Long count = queryFactory
+                .select(chatMessage.count())
+                .from(chatMessage)
+                .where(
+                        chatMessage.chatRoom.id.eq(chatRoomId)
+                                .and(chatMessage.id.gt(lastReadMessageId))
+                                .and(notDeleted())
+                )
+                .fetchOne();
+        return count == null ? 0 : count.intValue();
+    }
+
     // Soft Delete 공통 필터 (isDeleted = false)
     // 모든 메시지 조회 쿼리에 적용하여 삭제된 메시지 제외
     private BooleanExpression notDeleted() {
