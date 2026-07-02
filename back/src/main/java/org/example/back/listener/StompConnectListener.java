@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.back.exception.member.MemberErrorCode;
 import org.example.back.exception.member.MemberException;
 import org.example.back.repository.MemberRepository;
+import org.example.back.repository.participant.ChatParticipantRepository;
 import org.example.back.service.message.ChatMessageService;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
@@ -20,6 +21,7 @@ public class StompConnectListener {
 
     private final ChatMessageService chatMessageService;
     private final MemberRepository memberRepository;
+    private final ChatParticipantRepository chatParticipantRepository;
 
     @EventListener
     public void handleStompConnect(SessionConnectEvent event) {
@@ -48,6 +50,12 @@ public class StompConnectListener {
             chatRoomId = Long.valueOf(chatRoomIdStr);
         } catch (NumberFormatException e) {
             log.warn("입장 실패 - 잘못된 chatRoomId 형식 (memberId: {}, chatRoomId: {})", memberId, chatRoomIdStr);
+            return;
+        }
+
+        // 참여자가 아니면 입장 위장 차단 (임의 chatRoomId 헤더로 시스템 메시지 위조 방지)
+        if (chatParticipantRepository.findByChatRoomIdAndMemberId(chatRoomId, memberId).isEmpty()) {
+            log.warn("입장 거부 - 참여자 아님 (memberId: {}, chatRoomId: {})", memberId, chatRoomId);
             return;
         }
 
