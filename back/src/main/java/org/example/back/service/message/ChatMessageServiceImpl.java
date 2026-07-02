@@ -210,6 +210,10 @@ public class ChatMessageServiceImpl implements ChatMessageService {
 
         ChatMessage message = findMessageById(messageId);
 
+        if (message.getSender() == null) {
+            throw new ChatMessageException(SYSTEM_MESSAGE_NOT_EDITABLE);
+        }
+
         if (message.isDeleted()) {
             throw new ChatMessageException(ALREADY_DELETED_MESSAGE);
         }

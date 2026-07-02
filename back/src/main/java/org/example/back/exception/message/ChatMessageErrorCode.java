@@ -18,6 +18,7 @@ public enum ChatMessageErrorCode implements ErrorCode {
     NOT_MESSAGE_OWNER(HttpStatus.FORBIDDEN, "본인의 메시지만 수정/삭제/복구할 수 있습니다."),
     SYSTEM_MESSAGE_NOT_DELETABLE(HttpStatus.BAD_REQUEST, "시스템 메시지는 삭제할 수 없습니다."),
     SYSTEM_MESSAGE_NOT_RESTORABLE(HttpStatus.BAD_REQUEST, "시스템 메시지는 복구할 수 없습니다."),
+    SYSTEM_MESSAGE_NOT_EDITABLE(HttpStatus.BAD_REQUEST, "시스템 메시지는 수정할 수 없습니다."),
     EDIT_TIME_EXPIRED(HttpStatus.BAD_REQUEST, "메시지는 5분 이내에만 수정 가능합니다."),
     DELETE_TIME_EXPIRED(HttpStatus.BAD_REQUEST, "메시지는 5분 이내에만 삭제 가능합니다."),
     RESTORE_TIME_EXPIRED(HttpStatus.BAD_REQUEST, "메시지는 5분 이내에만 복구 가능합니다."),
